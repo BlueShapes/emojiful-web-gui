@@ -3,6 +3,8 @@
 Emojifulの絵文字パックを編集する共通GUIと、Minecraft **1.20.1 / Forge** 向けのMODです。
 Astroが生成した同じHTML・Reactコンポーネント・JavaScriptを、Cloudflare Workers Static Assets、Pages、MODのlocalhostサーバーで配信します。
 
+正規の公開先（日本語）: [https://emojiful-gui.aosankaku.net/ja/](https://emojiful-gui.aosankaku.net/ja/)
+
 ## できること
 
 - 画像URL・絵文字名・カテゴリーを登録、編集、削除
