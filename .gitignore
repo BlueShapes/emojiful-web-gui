@@ -1,0 +1,16 @@
+node_modules/
+web/dist/
+web/.astro/
+.wrangler/
+.dev.vars*
+.gradle/
+build/
+mod/build/
+mod/run/
+.work/
+.local/
+test-results/
+playwright-report/
+*.log
+.env*
+!.env.example

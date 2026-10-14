@@ -1,0 +1,14 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "emojiful-web-gui",
+  "compatibility_date": "2026-10-12",
+  "assets": {
+    "directory": "./web/dist",
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "none",
+  },
+  "build": {
+    "command": "bun run build",
+    "watch_dir": ["web/src", "web/public", "web/astro.config.mjs", "shared"],
+  },
+}

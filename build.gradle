@@ -1,0 +1,222 @@
+plugins {
+    id 'eclipse'
+    id 'idea'
+    id 'maven-publish'
+    id 'net.minecraftforge.gradle' version '6.0.54'
+}
+
+version = mod_version
+group = mod_group_id
+
+base {
+    archivesName = mod_id
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+
+minecraft {
+    mappings channel: mapping_channel, version: mapping_version
+    copyIdeResources = true
+    runs {
+        configureEach {
+            workingDirectory project.file('run')
+            property 'forge.logging.console.level', 'info'
+            mods {
+                "${mod_id}" { source sourceSets.main }
+            }
+        }
+        client {}
+        server { args '--nogui' }
+    }
+}
+
+sourceSets {
+    main {
+        java.srcDirs = ['mod/src/main/java']
+        resources.srcDirs = ['mod/src/main/resources']
+        resources.srcDir(layout.buildDirectory.dir('generated/localization/resources'))
+    }
+    test {
+        java.srcDirs = ['mod/src/test/java']
+        resources.srcDirs = ['mod/src/test/resources']
+    }
+}
+
+repositories {
+    maven { url = 'https://maven.minecraftforge.net/' }
+}
+
+dependencies {
+    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+    testImplementation platform('org.junit:junit-bom:5.10.2')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+}
+
+tasks.register('buildWeb', Exec) {
+    workingDir projectDir
+    commandLine 'bun', 'run', 'build'
+    inputs.files('package.json', 'bun.lock')
+    inputs.file('shared/locales.json')
+    inputs.files(fileTree('web') { exclude 'dist/**', '.astro/**' })
+    outputs.dir('web/dist')
+}
+
+def generatedLocalizationResources = layout.buildDirectory.dir('generated/localization/resources')
+tasks.register('generateLocalization') {
+    inputs.file('shared/locales.json')
+    inputs.files(fileTree('web/src/i18n/messages') { include '*.json' })
+    outputs.dir(generatedLocalizationResources)
+    doLast {
+        def manifestFile = layout.projectDirectory.file('shared/locales.json').asFile
+        def localeManifest = new groovy.json.JsonSlurper().parse(manifestFile, 'UTF-8')
+        if (!(localeManifest instanceof List) || localeManifest.isEmpty()) {
+            throw new GradleException('shared/locales.json must contain a non-empty locale array.')
+        }
+        def messagesDir = layout.projectDirectory.dir('web/src/i18n/messages').asFile
+        def messagesByCode = [:]
+        fileTree(messagesDir) { include '*.json' }.each { dictionaryFile ->
+            try {
+                messagesByCode[dictionaryFile.name.take(dictionaryFile.name.lastIndexOf('.'))] =
+                        new groovy.json.JsonSlurper().parse(dictionaryFile, 'UTF-8')
+            } catch (Exception e) {
+                throw new GradleException("Unable to parse translation dictionary ${dictionaryFile.name}.", e)
+            }
+        }
+        def requiredKeys = [
+            'mod.key.categories': 'key.categories.emojiful_web_gui',
+            'mod.key.open': 'key.emojiful_web_gui.open',
+            'mod.chat.available': 'chat.emojiful_web_gui.available',
+            'mod.chat.open': 'chat.emojiful_web_gui.open',
+            'mod.chat.unavailable': 'chat.emojiful_web_gui.unavailable'
+        ]
+        def outputRoot = generatedLocalizationResources.get().asFile
+        project.delete(outputRoot)
+        def minecraftCodes = [] as Set
+        def routeCodes = [] as Set
+        localeManifest.each { locale ->
+            if (!(locale instanceof Map) || !(locale.code instanceof String) || !(locale.htmlLang instanceof String)
+                    || !(locale.label instanceof String) || !(locale.minecraft instanceof List) || locale.minecraft.isEmpty()) {
+                throw new GradleException('Each locale requires code, htmlLang, label, and a non-empty minecraft array.')
+            }
+            String code = locale.code
+            if (!(code ==~ /[a-z]{2}(?:-[a-z]{2})?/) || !routeCodes.add(code)) {
+                throw new GradleException("Invalid or duplicate locale route code: ${code}.")
+            }
+            def dictionary = messagesByCode[code]
+            if (!(dictionary instanceof Map)) {
+                throw new GradleException("Missing web translation dictionary web/src/i18n/messages/${code}.json.")
+            }
+            def langMessages = [:]
+            requiredKeys.each { messageKey, minecraftKey ->
+                if (!(dictionary[messageKey] instanceof String) || dictionary[messageKey].trim().isEmpty()) {
+                    throw new GradleException("Translation ${code}.json is missing a non-empty ${messageKey} entry.")
+                }
+                langMessages[minecraftKey] = dictionary[messageKey]
+            }
+            locale.minecraft.each { minecraftCode ->
+                if (!(minecraftCode instanceof String) || !(minecraftCode ==~ /[a-z]{2,3}_[a-z]{2,3}/)
+                        || !minecraftCodes.add(minecraftCode)) {
+                    throw new GradleException("Invalid or duplicate Minecraft language code in locale ${code}: ${minecraftCode}.")
+                }
+                def langFile = new File(outputRoot, "assets/${mod_id}/lang/${minecraftCode}.json")
+                langFile.parentFile.mkdirs()
+                langFile.setText(groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(langMessages)) + '\n', 'UTF-8')
+            }
+        }
+        if (!routeCodes.contains('en')) {
+            throw new GradleException('Locale manifest must define the English fallback route "en".')
+        }
+        def runtimeManifest = new File(outputRoot, 'i18n/locales.json')
+        runtimeManifest.parentFile.mkdirs()
+        runtimeManifest.setText(groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(localeManifest)) + '\n', 'UTF-8')
+    }
+}
+
+tasks.named('processResources', ProcessResources).configure {
+    dependsOn tasks.named('buildWeb'), tasks.named('generateLocalization')
+    from(layout.projectDirectory.dir('web/dist')) { into 'web' }
+    inputs.properties([
+        minecraft_version: minecraft_version,
+        minecraft_version_range: minecraft_version_range,
+        forge_version: forge_version,
+        forge_version_range: forge_version_range,
+        loader_version_range: loader_version_range,
+        mod_id: mod_id,
+        mod_name: mod_name,
+        mod_license: mod_license,
+        mod_version: mod_version,
+        mod_authors: mod_authors,
+        mod_description: mod_description
+    ])
+    filesMatching('META-INF/mods.toml') {
+        expand([
+            minecraft_version: minecraft_version,
+            minecraft_version_range: minecraft_version_range,
+            forge_version: forge_version,
+            forge_version_range: forge_version_range,
+            loader_version_range: loader_version_range,
+            mod_id: mod_id,
+            mod_name: mod_name,
+            mod_license: mod_license,
+            mod_version: mod_version,
+            mod_authors: mod_authors,
+            mod_description: mod_description
+        ])
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+tasks.named('test', Test).configure {
+    useJUnitPlatform()
+}
+
+tasks.named('jar', Jar).configure {
+    manifest.attributes([
+        'Specification-Title': mod_id,
+        'Specification-Vendor': mod_authors,
+        'Specification-Version': '1',
+        'Implementation-Title': project.name,
+        'Implementation-Version': project.jar.archiveVersion,
+        'Implementation-Vendor': mod_authors
+    ])
+    finalizedBy 'reobfJar'
+}
+
+tasks.register('verifyModResources') {
+    dependsOn tasks.named('jar'), tasks.named('reobfJar')
+    def modJar = tasks.named('jar', Jar).flatMap { it.archiveFile }
+    inputs.file(modJar)
+    doLast {
+        new java.util.zip.ZipFile(modJar.get().asFile).withCloseable { archive ->
+            def entry = archive.getEntry('pack.mcmeta')
+            if (entry == null) {
+                throw new GradleException('The mod JAR is missing root pack.mcmeta; Forge cannot read its resource pack metadata.')
+            }
+            def metadata = archive.getInputStream(entry).withCloseable { stream ->
+                new groovy.json.JsonSlurper().parse(stream, 'UTF-8')
+            }
+            if (!(metadata.pack instanceof Map)
+                    || metadata.pack.pack_format != 15
+                    || !(metadata.pack.description instanceof String)
+                    || metadata.pack.description.trim().isEmpty()) {
+                throw new GradleException('The mod JAR must contain valid Minecraft 1.20.1 resource pack metadata (format 15).')
+            }
+        }
+    }
+}
+
+tasks.named('check').configure {
+    dependsOn tasks.named('verifyModResources')
+}
+
+publishing {
+    publications {
+        register('mavenJava', MavenPublication) { artifact jar }
+    }
+    repositories {
+        maven { url = "file://${project.projectDir}/mcmodsrepo" }
+    }
+}

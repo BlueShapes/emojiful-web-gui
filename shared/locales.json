@@ -1,0 +1,104 @@
+[
+  { "code": "ja", "htmlLang": "ja", "label": "日本語", "minecraft": ["ja_jp"] },
+  {
+    "code": "en",
+    "htmlLang": "en",
+    "label": "English",
+    "minecraft": ["en_us", "en_gb", "en_au", "en_ca", "en_nz"]
+  },
+  { "code": "hi", "htmlLang": "hi", "label": "हिन्दी", "minecraft": ["hi_in"] },
+  {
+    "code": "zh-hk",
+    "htmlLang": "zh-HK",
+    "label": "繁體中文（香港）",
+    "minecraft": ["zh_hk"]
+  },
+  {
+    "code": "zh-tw",
+    "htmlLang": "zh-TW",
+    "label": "繁體中文（台灣）",
+    "minecraft": ["zh_tw"]
+  },
+  {
+    "code": "zh-cn",
+    "htmlLang": "zh-CN",
+    "label": "简体中文（中国）",
+    "minecraft": ["zh_cn"]
+  },
+  {
+    "code": "ru",
+    "htmlLang": "ru",
+    "label": "Русский",
+    "minecraft": ["ru_ru"]
+  },
+  {
+    "code": "pt-br",
+    "htmlLang": "pt-BR",
+    "label": "Português (Brasil)",
+    "minecraft": ["pt_br"]
+  },
+  {
+    "code": "pt-pt",
+    "htmlLang": "pt-PT",
+    "label": "Português (Portugal)",
+    "minecraft": ["pt_pt"]
+  },
+  {
+    "code": "es",
+    "htmlLang": "es",
+    "label": "Español",
+    "minecraft": ["es_es", "es_ar", "es_cl", "es_ec", "es_mx", "es_uy", "es_ve"]
+  },
+  {
+    "code": "de",
+    "htmlLang": "de",
+    "label": "Deutsch",
+    "minecraft": ["de_de", "de_at", "de_ch"]
+  },
+  {
+    "code": "cs",
+    "htmlLang": "cs",
+    "label": "Čeština",
+    "minecraft": ["cs_cz"]
+  },
+  { "code": "pl", "htmlLang": "pl", "label": "Polski", "minecraft": ["pl_pl"] },
+  {
+    "code": "ms",
+    "htmlLang": "ms",
+    "label": "Bahasa Melayu",
+    "minecraft": ["ms_my"]
+  },
+  { "code": "ro", "htmlLang": "ro", "label": "Română", "minecraft": ["ro_ro"] },
+  {
+    "code": "fr",
+    "htmlLang": "fr",
+    "label": "Français",
+    "minecraft": ["fr_fr", "fr_ca"]
+  },
+  {
+    "code": "ar",
+    "htmlLang": "ar",
+    "label": "العربية",
+    "minecraft": ["ar_sa"]
+  },
+  {
+    "code": "id",
+    "htmlLang": "id",
+    "label": "Bahasa Indonesia",
+    "minecraft": ["id_id"]
+  },
+  { "code": "ko", "htmlLang": "ko", "label": "한국어", "minecraft": ["ko_kr"] },
+  {
+    "code": "vi",
+    "htmlLang": "vi",
+    "label": "Tiếng Việt",
+    "minecraft": ["vi_vn"]
+  },
+  { "code": "tr", "htmlLang": "tr", "label": "Türkçe", "minecraft": ["tr_tr"] },
+  {
+    "code": "it",
+    "htmlLang": "it",
+    "label": "Italiano",
+    "minecraft": ["it_it"]
+  }
+]

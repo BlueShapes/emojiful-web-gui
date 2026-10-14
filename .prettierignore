@@ -1,0 +1,10 @@
+node_modules
+web/dist
+web/.astro
+.wrangler
+.work
+build
+mod
+gradle
+bun.lock
+test-results

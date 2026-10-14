@@ -1,0 +1,36 @@
+---
+import PackStudio from '../components/PackStudio';
+import { locales, resolveLocale, translate } from '../i18n';
+import '../styles/studio.css';
+interface Props {
+  locale?: string;
+}
+const locale = resolveLocale(Astro.props.locale);
+const info = locales.find((item) => item.code === locale)!;
+---
+
+<!doctype html>
+<html lang={info.htmlLang} dir={locale === 'ar' ? 'rtl' : 'ltr'}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#edf3ee" />
+    <meta name="description" content={translate(locale, 'page.description')} />
+    <title>Emojiful — Pack Studio</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    {locales.map((item) => (
+      <link rel="alternate" hreflang={item.htmlLang} href={`/${item.code}/`} />
+    ))}
+  </head>
+  <body>
+    <div id="studio" data-locale={locale}>
+      <PackStudio locale={locale} />
+    </div>
+    <script>
+      import '../client';
+    </script>
+    <noscript>
+      <p class="noscript">{translate(locale, 'page.noscript')}</p>
+    </noscript>
+  </body>
+</html>
