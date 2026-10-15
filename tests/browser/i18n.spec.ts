@@ -32,7 +32,7 @@ test('all 22 static routes hydrate in their language under production CSP', asyn
       headers: {
         ...response.headers(),
         'Content-Security-Policy':
-          "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' https: http: data:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'",
+          "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self'; style-src 'self'; img-src 'self' https: http: data: blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'",
       },
     });
   });
@@ -137,6 +137,40 @@ test('all 22 static routes hydrate in their language under production CSP', asyn
     await expect(page.getByRole('alert')).toHaveText(
       text['nextcloud.invalidXml'],
     );
+    await page
+      .getByRole('button', { name: text.closeEditor, exact: true })
+      .click();
+    await page
+      .getByRole('button', { name: text['legacy.title'], exact: true })
+      .click();
+    await expect(
+      page.getByLabel(text['legacy.size'], { exact: true }),
+    ).toHaveValue('128');
+    await expect(
+      page.getByText(text['legacy.description'], { exact: true }),
+    ).toBeVisible();
+    await page.locator('input[type=file][accept*=webm]').setInputFiles({
+      name: 'bad.gif',
+      mimeType: 'image/gif',
+      buffer: Buffer.from('not an image'),
+    });
+    await page
+      .getByRole('button', { name: text['legacy.convert'], exact: true })
+      .click();
+    await expect(page.locator('.legacy-result-error')).toHaveText(
+      text['legacy.invalid'],
+    );
+    expect(
+      await page
+        .locator('.editor-dialog')
+        .evaluate((dialog) => dialog.scrollWidth <= dialog.clientWidth + 1),
+      `${locale.code}: legacy conversion fits mobile`,
+    ).toBe(true);
+    if (locale.code === 'ja' || locale.code === 'ar')
+      await page.screenshot({
+        path: `.work/legacy-mobile-${locale.code}.png`,
+        fullPage: true,
+      });
     await page
       .getByRole('button', { name: text.closeEditor, exact: true })
       .click();

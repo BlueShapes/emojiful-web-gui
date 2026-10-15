@@ -17,6 +17,7 @@ faviconのPNG代替画像とホーム画面用アイコンも同じSVGから生�
 - CSV、TSV、JSON、URLリストの貼り付け／ファイルから一括追加
 - 一括入力の「入力方法」を「表形式」に切り替え、行ごとに絵文字名・画像URL・カテゴリーを入力（行の追加・削除に対応）
 - Nextcloudの公開共有フォルダーから、画面に表示した取得コマンドとXMLの貼り付け／ファイル選択で画像一覧を表に取り込み
+- GIFの逆最適化と、WEBM・WEBP・APNGからGIFへの変換（legacy conversion）
 - 複数パックの作成・切り替えと、パックごとのブラウザー下書き自動保存
 - 下書きJSONの保存／復元、サイドバーの折りたたみと状態の保存
 - Emojiful互換のデータパックZIPを書き出し、既存ZIPを読み込んで編集
@@ -170,6 +171,16 @@ ZIPを**展開せず**に `<ワールド>/datapacks/` へ配置し、ワール�
 
 一括入力では「テキスト」「表形式」「Nextcloud」を切り替えられます。表形式は空行を読み飛ばし、カテゴリーが空欄の行には既定のカテゴリーを使います。入力不備や名前の重複がある場合は、全行の追加を中止します。
 
+### legacy conversion（GIFなどを変換する）
+
+1. 画面上部の「legacy conversion」を開き、GIF・WEBM・WEBP・APNGを複数選びます。APNGは拡張子が`.png`でも選べますが、通常の静止PNGは対象外です。GIFは各フレームをキャンバス全体に描画し直し、Emojifulで扱いやすいGIFにします。
+2. 出力サイズの上限は初期設定で128×128です。64、128、256、512から選べます。縦横比は保ち、画像を拡大しません。サイズを変更すると前の出力を破棄し、選択したファイルを新しいサイズで再変換できる状態に戻します。
+3. 変換後、GIFを個別に保存するか、成功したGIFだけをZIPで保存します。画像をNextcloudなどへ再アップロードし、パック内の画像URLを手動で更新してください。変換結果でパックやURLを自動変更することはありません。
+
+ファイルはブラウザー内で処理し、画像や動画をサイトへアップロードしません。変換エンジンは初回変換時に同じサイトからダウンロードされ、gzip圧縮で約9.7 MiBです。WebAssembly、Worker、OffscreenCanvas、DecompressionStreamに対応するブラウザーが必要です。WEBPのデコードにはブラウザー内蔵のWebPデコーダーも使います。WebMはVP8／VP9の透過を保持できますが、ほかのコーデックは変換できない場合があります。
+
+一度に20ファイルまで、1ファイル32 MiBまで、入力合計128 MiBまでです。動画は60秒・1200フレームまで、画像の縦横はそれぞれ4096ピクセルまで、出力GIFの合計は64 MiBまでです。GIFは1フレーム256色で、透明度は完全透明か不透明の2段階です。色の量子化やフレーム間隔の10 ms単位への丸めにより、元データと色・透明境界・再生時間が異なることがあります。
+
 ### Nextcloudのフォルダーから取り込む
 
 1. 「一括入力」→「入力方法」→「Nextcloud」を選び、公開フォルダーの共有URL（`https://cloud.example.com/s/SHARE_TOKEN`）を入力します。
@@ -261,4 +272,6 @@ Minecraft起動を伴う検証は上記のテストには含めません。
 互換形式は [Emojifulの公式レシピ例](https://github.com/InnovativeOnlineIndustries/Emojiful/blob/1.20/Common/src/main/resources/data/emojiful/recipes/comfy.json) と [シリアライザー](https://github.com/InnovativeOnlineIndustries/Emojiful/blob/1.20/Common/src/main/java/com/hrznstudio/emojiful/datapack/EmojiRecipeSerializer.java) に基づきます。
 公開設定は [Cloudflare PagesのAstroガイド](https://developers.cloudflare.com/pages/framework-guides/deploy-an-astro-site/) を参照してください。
 
-ライセンス: MIT。Emojifulの非公式補助ツールです。
+## ライセンス
+
+このプロジェクトのGUI／MODコードはMITライセンスです。legacy conversionで読み込むFFmpegベースの変換エンジンはGPL-2.0-or-laterで、同梱される各ライブラリーにも個別のライセンスが適用されます。対応するソースとライセンスは[エンジンの一覧](web/public/legacy-engine/SOURCES.md)を参照してください。Emojifulの非公式補助ツールです。

@@ -15,6 +15,7 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
@@ -82,6 +83,51 @@ class WebGuiHttpServerTest {
         assertEquals("no-cache", japanese.header("cache-control"));
         assertEquals("no-cache", english.header("cache-control"));
         assertEquals("no-cache", hongKongChinese.header("cache-control"));
+    }
+
+    @Test
+    void servesSelfHostedLegacyEngineAndLicenseAssetsWithoutAlteringCompressedBytes() throws Exception {
+        Response manifestResponse = request("GET", "/legacy-engine/generated/manifest.json", Map.of(), "");
+        assertEquals(200, manifestResponse.status());
+        assertTrue(manifestResponse.header("content-type").startsWith("application/json"));
+        JsonObject manifest = JsonParser.parseString(manifestResponse.body()).getAsJsonObject();
+        assertEquals("ffmpeg-core.js", manifest.get("core").getAsString());
+        assertEquals("ffmpeg-core.wasm.gz", manifest.get("wasm").getAsString());
+        assertTrue(manifest.get("sha256").getAsString().matches("[a-f0-9]{64}"));
+
+        Response script = request("GET", "/legacy-engine/generated/ffmpeg-core.js", Map.of(), "");
+        assertEquals(200, script.status());
+        assertTrue(script.header("content-type").startsWith("text/javascript"));
+        assertTrue(script.body().contains("export default createFFmpegCore"));
+        String policy = script.header("content-security-policy");
+        assertNotNull(policy);
+        assertTrue(directive(policy, "script-src").contains("'wasm-unsafe-eval'"));
+        assertFalse(directive(policy, "script-src").contains("'unsafe-eval'"));
+        assertEquals("worker-src 'self'", directive(policy, "worker-src"));
+        assertTrue(directive(policy, "img-src").contains("blob:"));
+
+        Response compressed = request("GET", "/legacy-engine/generated/ffmpeg-core.wasm.gz",
+                Map.of("Accept-Encoding", "identity"), "");
+        assertEquals(200, compressed.status());
+        assertEquals("application/octet-stream", compressed.header("content-type"));
+        assertNull(compressed.header("content-encoding"));
+        assertEquals(manifest.get("compressedBytes").getAsInt(), compressed.bodyBytes().length);
+        assertTrue(compressed.bodyBytes().length <= 25 * 1024 * 1024);
+        try (InputStream original = getClass().getClassLoader()
+                .getResourceAsStream("web/legacy-engine/generated/ffmpeg-core.wasm.gz")) {
+            assertNotNull(original);
+            assertArrayEquals(original.readAllBytes(), compressed.bodyBytes());
+        }
+
+        Response sources = request("GET", "/legacy-engine/SOURCES.md", Map.of(), "");
+        assertEquals(200, sources.status());
+        assertTrue(sources.body().contains("https://github.com/ffmpegwasm/ffmpeg.wasm/"));
+        assertTrue(sources.body().contains(manifest.get("version").getAsString()));
+        for (String license : new String[]{"COPYING.GPL-2.0.txt", "COPYING.GPL-3.0.txt"}) {
+            Response response = request("GET", "/legacy-engine/" + license, Map.of(), "");
+            assertEquals(200, response.status(), license);
+            assertTrue(response.body().contains("GNU GENERAL PUBLIC LICENSE"), license);
+        }
     }
 
     @Test
@@ -274,7 +320,8 @@ class WebGuiHttpServerTest {
             try (InputStream input = socket.getInputStream()) {
                 input.transferTo(response);
             }
-            String raw = response.toString(StandardCharsets.UTF_8);
+            byte[] responseBytes = response.toByteArray();
+            String raw = new String(responseBytes, StandardCharsets.ISO_8859_1);
             int split = raw.indexOf("\r\n\r\n");
             String[] lines = raw.substring(0, split).split("\r\n");
             int status = Integer.parseInt(lines[0].split(" ")[1]);
@@ -283,8 +330,17 @@ class WebGuiHttpServerTest {
                 int colon = lines[i].indexOf(':');
                 if (colon > 0) responseHeaders.put(lines[i].substring(0, colon).toLowerCase(), lines[i].substring(colon + 1).trim());
             }
-            return new Response(status, responseHeaders, raw.substring(split + 4));
+            byte[] responseBody = Arrays.copyOfRange(responseBytes, split + 4, responseBytes.length);
+            return new Response(status, responseHeaders, new String(responseBody, StandardCharsets.UTF_8), responseBody);
         }
+    }
+
+    private static String directive(String policy, String name) {
+        for (String value : policy.split(";")) {
+            String trimmed = value.trim();
+            if (trimmed.startsWith(name + " ")) return trimmed;
+        }
+        return "";
     }
 
     private static JsonObject readJson(ZipFile zip, String entryName) throws Exception {
@@ -301,7 +357,7 @@ class WebGuiHttpServerTest {
                 + "\",\"category\":\"Discord\"}]}";
     }
 
-    private record Response(int status, Map<String, String> headers, String body) {
+    private record Response(int status, Map<String, String> headers, String body, byte[] bodyBytes) {
         String header(String name) {
             return headers.get(name);
         }

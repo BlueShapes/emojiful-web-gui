@@ -38,6 +38,7 @@ import type { BulkFormat, EmojiEntry, EmojiPack } from '../lib/pack';
 import { importBulkTable } from '../lib/bulk-table';
 import BulkTable, { createBulkTableRows } from './BulkTable';
 import NextcloudInput, { emptyNextcloudDraft } from './NextcloudInput';
+import LegacyConversion from './LegacyConversion';
 import { importNextcloudListing, parseNextcloudFolder } from '../lib/nextcloud';
 import {
   addPack,
@@ -76,7 +77,7 @@ const blankEntry = (): EmojiEntry => ({
   url: '',
   category: 'Custom',
 });
-type Panel = 'single' | 'bulk' | 'installed' | null;
+type Panel = 'single' | 'bulk' | 'installed' | 'legacy' | null;
 type WindowWithDirectoryPicker = Window & {
   showDirectoryPicker?: (options: {
     id: string;
@@ -979,6 +980,16 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
             <div className="toolbar-actions">
               <button
                 className="button secondary"
+                onClick={() => {
+                  setPanelError('');
+                  setPanel('legacy');
+                }}
+              >
+                <Sparkles size={16} />
+                {t('legacy.title')}
+              </button>
+              <button
+                className="button secondary"
                 disabled={folderBusy}
                 onClick={() => fileInput.current?.click()}
               >
@@ -1286,7 +1297,7 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
 
       <dialog
         ref={modalRef}
-        className={`editor-dialog${panel === 'bulk' && bulkMode !== 'text' ? ' bulk-table-dialog' : ''}`}
+        className={`editor-dialog${panel === 'legacy' || (panel === 'bulk' && bulkMode !== 'text') ? ' bulk-table-dialog' : ''}`}
         onCancel={() => setPanel(null)}
         onClose={() => setPanel(null)}
       >
@@ -1298,9 +1309,11 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
                 ? editing
                   ? t('editEmoji')
                   : t('addEmoji')
-                : panel === 'bulk'
-                  ? t('bulkTitle')
-                  : t('installed.title')}
+                : panel === 'legacy'
+                  ? t('legacy.title')
+                  : panel === 'bulk'
+                    ? t('bulkTitle')
+                    : t('installed.title')}
             </h2>
           </div>
           <button
@@ -1316,6 +1329,7 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
             {panelError}
           </p>
         )}
+        {panel === 'legacy' && <LegacyConversion locale={locale} />}
         {panel === 'single' && (
           <form onSubmit={saveEntry} className="editor-form">
             <label>

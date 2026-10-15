@@ -57,6 +57,7 @@ tasks.register('buildWeb', Exec) {
     commandLine 'bun', 'run', 'build'
     inputs.files('package.json', 'bun.lock')
     inputs.file('shared/locales.json')
+    inputs.file('scripts/prepare-legacy-engine.mjs')
     inputs.files(fileTree('web') { exclude 'dist/**', '.astro/**' })
     outputs.dir('web/dist')
 }

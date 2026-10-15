@@ -429,7 +429,7 @@ public final class WebGuiHttpServer implements AutoCloseable {
         headers.set("X-Frame-Options", "DENY");
         headers.set("Referrer-Policy", "no-referrer");
         headers.set("Cross-Origin-Resource-Policy", "same-origin");
-        headers.set("Content-Security-Policy", "default-src 'self'; connect-src 'self'; img-src 'self' data: http: https:; style-src 'self'; script-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'");
+        headers.set("Content-Security-Policy", "default-src 'self'; connect-src 'self'; img-src 'self' data: http: https: blob:; style-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'");
     }
 
     @Override
