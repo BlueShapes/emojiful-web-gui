@@ -139,5 +139,21 @@
   "packs.created": "Pek baharu telah dicipta.",
   "packs.deleted": "Pek telah dipadamkan.",
   "sidebar.hide": "Runtuhkan bar sisi",
-  "sidebar.show": "Kembangkan bar sisi"
+  "sidebar.show": "Kembangkan bar sisi",
+  "folder.open": "Buka folder",
+  "folder.input": "Folder pek",
+  "folder.save": "Simpan ke folder",
+  "folder.linked": "Folder dipautkan: {name}",
+  "folder.directHelp": "Gunakan “Simpan ke folder” untuk menggunakan perubahan pada folder asal.",
+  "folder.readOnly": "Pelayar ini hanya boleh membaca folder. Eksport ZIP selepas mengedit.",
+  "folder.permission": "Akses ke folder tidak dibenarkan. Benarkan akses dalam pelayar dan cuba lagi.",
+  "folder.conflict": "Folder telah diubah dari luar atau destinasi mengandungi fail lain. Kekalkan draf semasa dan buka semula folder.",
+  "folder.invalid": "Pilih folder akar pek emoji.",
+  "folder.tooLarge": "Data pek dalam folder ini melebihi had saiz atau bilangan fail.",
+  "folder.writeFailed": "Tidak dapat menyimpan ke folder. Fail yang diubah telah dipulihkan.",
+  "folder.rollbackFailed": "Penyimpanan gagal dan sesetengah fail tidak dapat dipulihkan. Periksa folder.",
+  "folder.sessionOnly": "Sambungan ke folder hanya tersedia selagi halaman ini terbuka. Buka semula selepas memuat semula halaman.",
+  "folder.saved": "Disimpan ke “{name}”.",
+  "folder.unsaved": "Terdapat perubahan yang belum disimpan ke folder.",
+  "folder.upToDate": "Disimpan dalam folder."
 }

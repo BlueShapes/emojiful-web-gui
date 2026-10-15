@@ -139,5 +139,21 @@
   "packs.created": "已创建新表情包。",
   "packs.deleted": "已删除表情包。",
   "sidebar.hide": "收起侧边栏",
-  "sidebar.show": "展开侧边栏"
+  "sidebar.show": "展开侧边栏",
+  "folder.open": "打开文件夹",
+  "folder.input": "表情包文件夹",
+  "folder.save": "保存到文件夹",
+  "folder.linked": "已关联文件夹：{name}",
+  "folder.directHelp": "使用“保存到文件夹”将更改应用到原文件夹。",
+  "folder.readOnly": "此浏览器只能读取文件夹。编辑后请导出 ZIP。",
+  "folder.permission": "未获得文件夹访问权限。请在浏览器中允许访问后重试。",
+  "folder.conflict": "文件夹内容已在外部更改，或目标位置存在其他文件。请保留当前草稿并重新打开文件夹。",
+  "folder.invalid": "请选择表情包的根文件夹。",
+  "folder.tooLarge": "此文件夹中的表情包数据超出大小或文件数量限制。",
+  "folder.writeFailed": "无法保存到文件夹。已还原更改过的文件。",
+  "folder.rollbackFailed": "保存时发生错误，部分文件无法还原。请检查文件夹。",
+  "folder.sessionOnly": "文件夹关联仅在此页面打开期间有效。重新加载页面后请重新打开文件夹。",
+  "folder.saved": "已保存到“{name}”。",
+  "folder.unsaved": "有更改尚未保存到文件夹。",
+  "folder.upToDate": "已保存到文件夹。"
 }

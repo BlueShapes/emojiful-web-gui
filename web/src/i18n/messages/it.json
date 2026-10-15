@@ -139,5 +139,21 @@
   "packs.created": "Nuovo pacchetto creato.",
   "packs.deleted": "Pacchetto eliminato.",
   "sidebar.hide": "Comprimi barra laterale",
-  "sidebar.show": "Espandi barra laterale"
+  "sidebar.show": "Espandi barra laterale",
+  "folder.open": "Apri cartella",
+  "folder.input": "Cartella del pacchetto",
+  "folder.save": "Salva nella cartella",
+  "folder.linked": "Cartella collegata: {name}",
+  "folder.directHelp": "Usa «Salva nella cartella» per applicare le modifiche alla cartella originale.",
+  "folder.readOnly": "Questo browser può solo leggere le cartelle. Esporta uno ZIP dopo le modifiche.",
+  "folder.permission": "L’accesso alla cartella non è stato autorizzato. Consenti l’accesso nel browser e riprova.",
+  "folder.conflict": "La cartella è stata modificata esternamente o la destinazione contiene un altro file. Conserva la bozza attuale e riapri la cartella.",
+  "folder.invalid": "Seleziona la cartella principale di un pacchetto di emoji.",
+  "folder.tooLarge": "I dati del pacchetto in questa cartella superano il limite di dimensione o di numero di file.",
+  "folder.writeFailed": "Impossibile salvare nella cartella. I file modificati sono stati ripristinati.",
+  "folder.rollbackFailed": "Salvataggio non riuscito e alcuni file non sono stati ripristinati. Controlla la cartella.",
+  "folder.sessionOnly": "Il collegamento alla cartella resta attivo solo finché questa pagina è aperta. Riaprila dopo aver ricaricato la pagina.",
+  "folder.saved": "Salvato in «{name}».",
+  "folder.unsaved": "Ci sono modifiche non ancora salvate nella cartella.",
+  "folder.upToDate": "Salvato nella cartella."
 }

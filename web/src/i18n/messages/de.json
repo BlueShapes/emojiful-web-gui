@@ -139,5 +139,21 @@
   "packs.created": "Neues Paket erstellt.",
   "packs.deleted": "Paket gelöscht.",
   "sidebar.hide": "Seitenleiste einklappen",
-  "sidebar.show": "Seitenleiste ausklappen"
+  "sidebar.show": "Seitenleiste ausklappen",
+  "folder.open": "Ordner öffnen",
+  "folder.input": "Paketordner",
+  "folder.save": "Im Ordner speichern",
+  "folder.linked": "Verknüpfter Ordner: {name}",
+  "folder.directHelp": "Mit „Im Ordner speichern“ werden Änderungen auf den ursprünglichen Ordner angewendet.",
+  "folder.readOnly": "Dieser Browser kann Ordner nur lesen. Exportiere nach der Bearbeitung eine ZIP-Datei.",
+  "folder.permission": "Der Zugriff auf den Ordner wurde nicht erlaubt. Erlaube den Zugriff im Browser und versuche es erneut.",
+  "folder.conflict": "Der Ordner wurde extern geändert oder am Ziel befindet sich eine andere Datei. Behalte den aktuellen Entwurf und öffne den Ordner erneut.",
+  "folder.invalid": "Wähle den Stammordner eines Emoji-Pakets aus.",
+  "folder.tooLarge": "Die Paketdaten in diesem Ordner überschreiten die Größen- oder Dateianzahlgrenze.",
+  "folder.writeFailed": "Der Ordner konnte nicht gespeichert werden. Geänderte Dateien wurden wiederhergestellt.",
+  "folder.rollbackFailed": "Beim Speichern ist ein Fehler aufgetreten und einige Dateien konnten nicht wiederhergestellt werden. Überprüfe den Ordner.",
+  "folder.sessionOnly": "Die Verknüpfung mit dem Ordner gilt nur, solange diese Seite geöffnet ist. Öffne ihn nach dem Neuladen erneut.",
+  "folder.saved": "In „{name}“ gespeichert.",
+  "folder.unsaved": "Es gibt Änderungen, die noch nicht im Ordner gespeichert sind.",
+  "folder.upToDate": "Im Ordner gespeichert."
 }

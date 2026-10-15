@@ -139,5 +139,21 @@
   "packs.created": "New pack created.",
   "packs.deleted": "Pack deleted.",
   "sidebar.hide": "Collapse sidebar",
-  "sidebar.show": "Expand sidebar"
+  "sidebar.show": "Expand sidebar",
+  "folder.open": "Open folder",
+  "folder.input": "Pack folder",
+  "folder.save": "Save to folder",
+  "folder.linked": "Linked folder: {name}",
+  "folder.directHelp": "Use “Save to folder” to apply changes to the original folder.",
+  "folder.readOnly": "This browser can only read folders. Export a ZIP after editing.",
+  "folder.permission": "Folder access was not granted. Allow access in your browser and try again.",
+  "folder.conflict": "The folder changed externally or a destination contains another file. Keep your current draft and reopen the folder.",
+  "folder.invalid": "Select the root folder of an emoji pack.",
+  "folder.tooLarge": "Pack data in this folder exceeds the size or file count limit.",
+  "folder.writeFailed": "Could not save to the folder. Changed files were restored.",
+  "folder.rollbackFailed": "Saving failed and some files could not be restored. Check the folder.",
+  "folder.sessionOnly": "The folder connection lasts only while this page is open. Reopen it after reloading.",
+  "folder.saved": "Saved to “{name}”.",
+  "folder.unsaved": "There are changes not yet saved to the folder.",
+  "folder.upToDate": "Saved in the folder."
 }

@@ -139,5 +139,21 @@
   "packs.created": "Utworzono nowy pakiet.",
   "packs.deleted": "Pakiet został usunięty.",
   "sidebar.hide": "Zwiń panel boczny",
-  "sidebar.show": "Rozwiń panel boczny"
+  "sidebar.show": "Rozwiń panel boczny",
+  "folder.open": "Otwórz folder",
+  "folder.input": "Folder pakietu",
+  "folder.save": "Zapisz w folderze",
+  "folder.linked": "Połączony folder: {name}",
+  "folder.directHelp": "Użyj opcji „Zapisz w folderze”, aby zastosować zmiany w oryginalnym folderze.",
+  "folder.readOnly": "Ta przeglądarka umożliwia tylko odczyt folderów. Po edycji wyeksportuj plik ZIP.",
+  "folder.permission": "Nie przyznano dostępu do folderu. Zezwól na dostęp w przeglądarce i spróbuj ponownie.",
+  "folder.conflict": "Folder został zmieniony z zewnątrz lub w miejscu docelowym znajduje się inny plik. Zachowaj bieżący szkic i otwórz folder ponownie.",
+  "folder.invalid": "Wybierz folder główny pakietu emoji.",
+  "folder.tooLarge": "Dane pakietu w tym folderze przekraczają limit rozmiaru lub liczby plików.",
+  "folder.writeFailed": "Nie udało się zapisać w folderze. Zmienione pliki zostały przywrócone.",
+  "folder.rollbackFailed": "Zapisywanie nie powiodło się i nie udało się przywrócić niektórych plików. Sprawdź folder.",
+  "folder.sessionOnly": "Połączenie z folderem działa tylko podczas otwarcia tej strony. Po jej odświeżeniu otwórz folder ponownie.",
+  "folder.saved": "Zapisano w „{name}”.",
+  "folder.unsaved": "W folderze są niezapisane zmiany.",
+  "folder.upToDate": "Zapisano w folderze."
 }

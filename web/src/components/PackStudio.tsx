@@ -47,6 +47,17 @@ import {
 } from '../lib/workspace';
 import type { Workspace } from '../lib/workspace';
 import {
+  readDirectoryFiles,
+  readDirectoryPack,
+  saveDirectoryPack,
+} from '../lib/folder';
+import type { DirectoryHandle, DirectorySource } from '../lib/folder';
+import {
+  deleteFolderBinding,
+  loadFolderBindings,
+  putFolderBinding,
+} from '../lib/folder-bindings';
+import {
   detectRuntime,
   installPack,
   listInstalled,
@@ -62,6 +73,21 @@ const blankEntry = (): EmojiEntry => ({
   category: 'Custom',
 });
 type Panel = 'single' | 'bulk' | 'installed' | null;
+type WindowWithDirectoryPicker = Window & {
+  showDirectoryPicker?: (options: {
+    id: string;
+    mode: 'read';
+  }) => Promise<DirectoryHandle>;
+};
+
+function isAbortError(error: unknown): boolean {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'name' in error &&
+    (error as { name?: unknown }).name === 'AbortError'
+  );
+}
 
 function download(bytes: BlobPart, filename: string, type: string) {
   const url = URL.createObjectURL(new Blob([bytes], { type }));
@@ -121,17 +147,43 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
   const [panelError, setPanelError] = useState('');
   const [installed, setInstalled] = useState<InstalledPack[]>([]);
   const [busy, setBusy] = useState(false);
+  const [folderBusy, setFolderBusy] = useState(false);
+  const [folderWriting, setFolderWriting] = useState(false);
+  const [folderSources, setFolderSources] = useState<
+    Record<string, DirectorySource>
+  >({});
+  const [readOnlyFolderSources, setReadOnlyFolderSources] = useState<
+    Record<string, { name: string; savedPack: EmojiPack }>
+  >({});
+  const [sessionOnlyFolders, setSessionOnlyFolders] = useState<
+    Record<string, boolean>
+  >({});
   const [overwrite, setOverwrite] = useState(false);
   const [confirmation, setConfirmation] = useState<{
     message: string;
     action: () => void;
   } | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
+  const folderInput = useRef<HTMLInputElement>(null);
+  const folderSourcesRef = useRef(folderSources);
+  folderSourcesRef.current = folderSources;
+  const folderOperationRef = useRef(false);
+  const folderWritingRef = useRef(false);
+  const folderBindingVersionsRef = useRef<Record<string, number>>({});
+  const deletedDraftKeysRef = useRef(new Set<string>());
+  const pendingFolderDraftKeysRef = useRef(new Set<string>());
   const workspaceRef = useRef(workspace);
   workspaceRef.current = workspace;
   const modalRef = useRef<HTMLDialogElement>(null);
   const confirmRef = useRef<HTMLDialogElement>(null);
   const pack = getActivePack(workspace);
+  const activeFolderSource = folderSources[workspace.activeKey];
+  const activeReadOnlyFolder = readOnlyFolderSources[workspace.activeKey];
+  const folderDirty = activeFolderSource
+    ? JSON.stringify(pack) !== JSON.stringify(activeFolderSource.savedPack)
+    : activeReadOnlyFolder
+      ? JSON.stringify(pack) !== JSON.stringify(activeReadOnlyFolder.savedPack)
+      : false;
   const categories = [
     ...new Set(pack.emojis.map((emoji) => emoji.category)),
   ].sort((a, b) =>
@@ -147,7 +199,9 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
 
   useEffect(() => {
     try {
-      setWorkspace(loadWorkspace(localStorage));
+      const restored = loadWorkspace(localStorage);
+      workspaceRef.current = restored;
+      setWorkspace(restored);
     } catch {
       setRestoreFailed(true);
       setStorageFailed(true);
@@ -158,6 +212,44 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
     }
     setReady(true);
     void detectRuntime().then(setRuntime);
+  }, []);
+  useEffect(() => {
+    if (folderInput.current) folderInput.current.webkitdirectory = true;
+  }, []);
+  useEffect(() => {
+    let current = true;
+    const versionsAtStart = { ...folderBindingVersionsRef.current };
+    void loadFolderBindings()
+      .then((bindings) => {
+        if (!current) return;
+        const drafts = new Set(
+          workspaceRef.current.packs.map((item) => item.key),
+        );
+        const next = { ...folderSourcesRef.current };
+        let changed = false;
+        for (const [key, source] of Object.entries(bindings)) {
+          if (
+            !drafts.has(key) ||
+            deletedDraftKeysRef.current.has(key) ||
+            (folderBindingVersionsRef.current[key] ?? 0) !==
+              (versionsAtStart[key] ?? 0)
+          )
+            continue;
+          next[key] = source;
+          changed = true;
+        }
+        if (changed) {
+          folderSourcesRef.current = next;
+          setFolderSources(next);
+        }
+      })
+      .catch(() => {
+        // IndexedDB can be unavailable in private browsing or embedded views.
+        // The current tab's folder handles remain usable in memory.
+      });
+    return () => {
+      current = false;
+    };
   }, []);
   useEffect(() => {
     if (!ready || restoreFailed) return;
@@ -178,13 +270,113 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
     if (!confirmation) confirmRef.current?.close();
   }, [confirmation]);
   useEffect(() => {
+    if (!folderWriting) return;
+    const preventUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', preventUnload);
+    return () => window.removeEventListener('beforeunload', preventUnload);
+  }, [folderWriting]);
+  useEffect(() => {
     if (category && !categories.includes(category)) setCategory('');
   }, [pack.emojis, category]);
 
   function notify(message: string, error = false) {
     setNotice({ message, error });
   }
+  function changeFolderSource(key: string, source?: DirectorySource) {
+    const next = { ...folderSourcesRef.current };
+    if (source) next[key] = source;
+    else delete next[key];
+    folderSourcesRef.current = next;
+    setFolderSources(next);
+  }
+  function bumpFolderBindingVersion(key: string) {
+    folderBindingVersionsRef.current[key] =
+      (folderBindingVersionsRef.current[key] ?? 0) + 1;
+  }
+  function beginFolderOperation(write = false) {
+    if (folderOperationRef.current) return false;
+    folderOperationRef.current = true;
+    setFolderBusy(true);
+    if (write) {
+      folderWritingRef.current = true;
+      setFolderWriting(true);
+    }
+    return true;
+  }
+  function endFolderOperation() {
+    folderOperationRef.current = false;
+    folderWritingRef.current = false;
+    setFolderBusy(false);
+    setFolderWriting(false);
+  }
+  function addFolderDraft(imported: EmojiPack, key = crypto.randomUUID()) {
+    pendingFolderDraftKeysRef.current.add(key);
+    setWorkspace((current) => addPack(current, imported, key));
+    resetPackView();
+    return key;
+  }
+  async function persistFolderBinding(
+    key: string,
+    source: DirectorySource,
+  ): Promise<boolean> {
+    bumpFolderBindingVersion(key);
+    let sessionOnly = false;
+    try {
+      await putFolderBinding(key, source);
+      setSessionOnlyFolders((current) => {
+        if (!current[key]) return current;
+        const next = { ...current };
+        delete next[key];
+        return next;
+      });
+    } catch {
+      if (
+        !deletedDraftKeysRef.current.has(key) &&
+        (pendingFolderDraftKeysRef.current.has(key) ||
+          workspaceRef.current.packs.some((item) => item.key === key))
+      ) {
+        sessionOnly = true;
+        setSessionOnlyFolders((current) => ({ ...current, [key]: true }));
+      }
+    }
+    if (
+      deletedDraftKeysRef.current.has(key) ||
+      (!pendingFolderDraftKeysRef.current.has(key) &&
+        !workspaceRef.current.packs.some((item) => item.key === key))
+    ) {
+      try {
+        await deleteFolderBinding(key);
+      } catch {
+        // Orphaned records are filtered against workspace drafts on restore.
+      }
+    }
+    pendingFolderDraftKeysRef.current.delete(key);
+    return sessionOnly;
+  }
+  function forgetFolderDraft(key: string) {
+    deletedDraftKeysRef.current.add(key);
+    pendingFolderDraftKeysRef.current.delete(key);
+    bumpFolderBindingVersion(key);
+    changeFolderSource(key);
+    setReadOnlyFolderSources((current) => {
+      const next = { ...current };
+      delete next[key];
+      return next;
+    });
+    setSessionOnlyFolders((current) => {
+      const next = { ...current };
+      delete next[key];
+      return next;
+    });
+    void deleteFolderBinding(key).catch(() => {
+      // A stale binding cannot be reused because draft keys are unique.
+    });
+  }
   function changeLanguage(next: string) {
+    if (folderOperationRef.current) return;
     if (restoreFailed) {
       notify(t('storage.failed'), true);
       return;
@@ -263,6 +455,109 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
       notify(errorMessage(error, locale), true);
     }
     if (fileInput.current) fileInput.current.value = '';
+  }
+  function openFolderPicker() {
+    if (folderOperationRef.current || folderWritingRef.current) return;
+    const picker = (window as WindowWithDirectoryPicker).showDirectoryPicker;
+    if (typeof picker !== 'function') {
+      folderInput.current?.click();
+      return;
+    }
+
+    // Invoke the native picker directly from the button's click stack so the
+    // browser keeps the required user activation.
+    let selection: Promise<DirectoryHandle>;
+    try {
+      selection = picker.call(window, { id: 'emojiful-pack', mode: 'read' });
+    } catch (error) {
+      if (!isAbortError(error)) notify(errorMessage(error, locale), true);
+      return;
+    }
+    if (!beginFolderOperation()) return;
+    void (async () => {
+      try {
+        const handle = await selection;
+        const { pack: imported, source } = await readDirectoryPack(handle);
+        const key = addFolderDraft(imported);
+        changeFolderSource(key, source);
+        setReadOnlyFolderSources((current) => {
+          const next = { ...current };
+          delete next[key];
+          return next;
+        });
+        const sessionOnly = await persistFolderBinding(key, source);
+        if (!deletedDraftKeysRef.current.has(key))
+          notify(
+            sessionOnly
+              ? `${t('notice.loaded')} ${t('folder.sessionOnly')}`
+              : t('notice.loaded'),
+          );
+      } catch (error) {
+        if (!isAbortError(error)) notify(errorMessage(error, locale), true);
+      } finally {
+        endFolderOperation();
+      }
+    })();
+  }
+  async function importFolderFiles(files?: FileList | null) {
+    const selected = Array.from(files ?? []);
+    if (!selected.length) {
+      if (folderInput.current) folderInput.current.value = '';
+      return;
+    }
+    if (!beginFolderOperation()) return;
+    try {
+      const imported = await readDirectoryFiles(selected);
+      const key = addFolderDraft(imported);
+      const firstPath = (selected[0] as File & { webkitRelativePath?: string })
+        .webkitRelativePath;
+      const name = firstPath?.split('/')[0] || t('folder.input');
+      setReadOnlyFolderSources((current) => ({
+        ...current,
+        [key]: { name, savedPack: imported },
+      }));
+      notify(t('notice.loaded'));
+    } catch (error) {
+      notify(errorMessage(error, locale), true);
+    } finally {
+      if (folderInput.current) folderInput.current.value = '';
+      endFolderOperation();
+    }
+  }
+  async function saveActiveFolder() {
+    if (folderOperationRef.current || folderWritingRef.current) return;
+    const key = workspaceRef.current.activeKey;
+    const source = folderSourcesRef.current[key];
+    const draft = workspaceRef.current.packs.find((item) => item.key === key);
+    if (!source || !draft) return;
+    const snapshot: EmojiPack = {
+      ...draft.pack,
+      emojis: draft.pack.emojis.map((emoji) => ({ ...emoji })),
+    };
+    if (!beginFolderOperation(true)) return;
+    try {
+      const updated = await saveDirectoryPack(source, snapshot);
+      if (
+        deletedDraftKeysRef.current.has(key) ||
+        !workspaceRef.current.packs.some((item) => item.key === key)
+      ) {
+        await deleteFolderBinding(key).catch(() => undefined);
+        return;
+      }
+      changeFolderSource(key, updated);
+      const sessionOnly = await persistFolderBinding(key, updated);
+      if (!deletedDraftKeysRef.current.has(key))
+        notify(
+          sessionOnly
+            ? `${t('folder.saved', { name: source.name })} ${t('folder.sessionOnly')}`
+            : t('folder.saved', { name: source.name }),
+        );
+    } catch (error) {
+      if (!deletedDraftKeysRef.current.has(key))
+        notify(errorMessage(error, locale), true);
+    } finally {
+      endFolderOperation();
+    }
   }
   function saveEntry(event: SubmitEvent) {
     event.preventDefault();
@@ -360,6 +655,12 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
           href={localePath(locale)}
           aria-label={t('home')}
           dir="ltr"
+          onClick={(event) => {
+            if (folderOperationRef.current) {
+              event.preventDefault();
+              notify(t('busy'));
+            }
+          }}
         >
           <img
             className="brand-mark"
@@ -378,7 +679,7 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
             <span className="visually-hidden">{t('language')}</span>
             <select
               value={locale}
-              disabled={!ready}
+              disabled={!ready || folderBusy}
               onChange={(event) => changeLanguage(event.target.value)}
             >
               {locales.map((item) => (
@@ -439,7 +740,7 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
             <select
               aria-label={t('packs.switch')}
               value={workspace.activeKey}
-              disabled={!ready}
+              disabled={!ready || folderBusy}
               onChange={(event) => switchPack(event.target.value)}
             >
               {workspace.packs.map((item, index) => (
@@ -451,7 +752,7 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
           </label>
           <button
             className="button secondary workspace-create"
-            disabled={!ready}
+            disabled={!ready || folderBusy}
             onClick={createPack}
           >
             <Plus size={17} />
@@ -459,7 +760,7 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
           </button>
           <button
             className="button secondary workspace-delete"
-            disabled={!ready || workspace.packs.length <= 1}
+            disabled={!ready || folderBusy || workspace.packs.length <= 1}
             onClick={() => {
               const key = workspace.activeKey;
               setConfirmation({
@@ -467,6 +768,7 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
                   name: pack.name || t('unnamed'),
                 }),
                 action: () => {
+                  forgetFolderDraft(key);
                   setWorkspace((current) => removePack(current, key));
                   resetPackView();
                   notify(t('packs.deleted'));
@@ -641,10 +943,19 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
             <div className="toolbar-actions">
               <button
                 className="button secondary"
+                disabled={folderBusy}
                 onClick={() => fileInput.current?.click()}
               >
                 <FolderOpen size={16} />
                 {t('openPack')}
+              </button>
+              <button
+                className="button secondary"
+                disabled={folderBusy}
+                onClick={openFolderPicker}
+              >
+                <FolderOpen size={16} />
+                {t('folder.open')}
               </button>
               <button
                 className="button secondary"
@@ -668,8 +979,56 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
             type="file"
             accept=".zip,.json,application/zip,application/json"
             aria-label={t('packFile')}
+            disabled={folderBusy}
             onChange={(event) => void importFile(event.target.files?.[0])}
           />
+          <input
+            ref={folderInput}
+            className="visually-hidden"
+            type="file"
+            multiple
+            aria-label={t('folder.input')}
+            disabled={folderBusy}
+            onChange={(event) => void importFolderFiles(event.target.files)}
+          />
+          {(activeFolderSource || activeReadOnlyFolder) && (
+            <div className="folder-source" aria-live="polite">
+              {activeFolderSource ? (
+                <>
+                  <p className="folder-source-name">
+                    <FolderOpen size={15} />
+                    <strong>
+                      {t('folder.linked', { name: activeFolderSource.name })}
+                    </strong>
+                  </p>
+                  <p>{t('folder.directHelp')}</p>
+                  <p
+                    className={`folder-source-status ${folderDirty ? 'dirty' : ''}`}
+                  >
+                    {folderDirty ? t('folder.unsaved') : t('folder.upToDate')}
+                    {sessionOnlyFolders[workspace.activeKey]
+                      ? ` · ${t('folder.sessionOnly')}`
+                      : ''}
+                  </p>
+                </>
+              ) : activeReadOnlyFolder ? (
+                <>
+                  <p className="folder-source-name">
+                    <FolderOpen size={15} />
+                    <strong>
+                      {t('folder.linked', { name: activeReadOnlyFolder.name })}
+                    </strong>
+                  </p>
+                  <p>{t('folder.readOnly')}</p>
+                  <p
+                    className={`folder-source-status ${folderDirty ? 'dirty' : ''}`}
+                  >
+                    {folderDirty ? t('folder.unsaved') : t('folder.upToDate')}
+                  </p>
+                </>
+              ) : null}
+            </div>
+          )}
           <div className="search-row">
             <Search size={17} />
             <input
@@ -826,6 +1185,16 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
               </div>
             </div>
             <div className="export-actions">
+              {activeFolderSource && (
+                <button
+                  className="button primary"
+                  disabled={folderBusy || folderWriting}
+                  onClick={() => void saveActiveFolder()}
+                >
+                  <Check size={16} />
+                  {folderWriting ? t('busy') : t('folder.save')}
+                </button>
+              )}
               <button
                 className="button secondary"
                 disabled={!pack.emojis.length}
@@ -850,6 +1219,7 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
             <div className="runtime-note">
               <button
                 className="text-button"
+                disabled={folderBusy}
                 onClick={() => void showInstalled()}
               >
                 <FolderOpen size={14} />

@@ -148,6 +148,7 @@ export function selectPack(workspace: Workspace, key: string): Workspace {
 export function addPack(
   workspace: Workspace,
   optionalImportedPack?: EmojiPack,
+  optionalKey?: string,
 ): Workspace {
   let pack: EmojiPack;
   if (optionalImportedPack) {
@@ -167,7 +168,12 @@ export function addPack(
     };
   }
 
-  const key = newKey();
+  const key = optionalKey ?? newKey();
+  if (
+    !KEY_PATTERN.test(key) ||
+    workspace.packs.some((item) => item.key === key)
+  )
+    throw new TypeError('Invalid or duplicate pack key.');
   return {
     ...workspace,
     activeKey: key,

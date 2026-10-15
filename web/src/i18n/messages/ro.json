@@ -139,5 +139,21 @@
   "packs.created": "Pachet nou creat.",
   "packs.deleted": "Pachet șters.",
   "sidebar.hide": "Restrânge bara laterală",
-  "sidebar.show": "Extinde bara laterală"
+  "sidebar.show": "Extinde bara laterală",
+  "folder.open": "Deschide folderul",
+  "folder.input": "Folderul pachetului",
+  "folder.save": "Salvează în folder",
+  "folder.linked": "Folder conectat: {name}",
+  "folder.directHelp": "Folosește „Salvează în folder” pentru a aplica modificările în folderul original.",
+  "folder.readOnly": "Acest browser poate doar să citească foldere. Exportă un ZIP după editare.",
+  "folder.permission": "Accesul la folder nu a fost acordat. Permite accesul în browser și încearcă din nou.",
+  "folder.conflict": "Folderul a fost modificat extern sau destinația conține alt fișier. Păstrează schița curentă și redeschide folderul.",
+  "folder.invalid": "Selectează folderul rădăcină al unui pachet de emoji.",
+  "folder.tooLarge": "Datele pachetului din acest folder depășesc limita de dimensiune sau de număr de fișiere.",
+  "folder.writeFailed": "Nu s-a putut salva în folder. Fișierele modificate au fost restaurate.",
+  "folder.rollbackFailed": "Salvarea a eșuat și unele fișiere nu au putut fi restaurate. Verifică folderul.",
+  "folder.sessionOnly": "Conexiunea cu folderul este activă doar cât timp această pagină rămâne deschisă. Redeschide-l după reîncărcarea paginii.",
+  "folder.saved": "Salvat în „{name}”.",
+  "folder.unsaved": "Există modificări care nu au fost încă salvate în folder.",
+  "folder.upToDate": "Salvat în folder."
 }

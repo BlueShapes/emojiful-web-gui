@@ -139,5 +139,21 @@
   "packs.created": "Đã tạo gói mới.",
   "packs.deleted": "Đã xóa gói.",
   "sidebar.hide": "Thu gọn thanh bên",
-  "sidebar.show": "Mở rộng thanh bên"
+  "sidebar.show": "Mở rộng thanh bên",
+  "folder.open": "Mở thư mục",
+  "folder.input": "Thư mục gói",
+  "folder.save": "Lưu vào thư mục",
+  "folder.linked": "Thư mục được liên kết: {name}",
+  "folder.directHelp": "Dùng “Lưu vào thư mục” để áp dụng thay đổi vào thư mục gốc.",
+  "folder.readOnly": "Trình duyệt này chỉ có thể đọc thư mục. Hãy xuất ZIP sau khi chỉnh sửa.",
+  "folder.permission": "Chưa cấp quyền truy cập thư mục. Hãy cho phép trong trình duyệt rồi thử lại.",
+  "folder.conflict": "Thư mục đã bị thay đổi bên ngoài hoặc đích lưu có tệp khác. Hãy giữ bản nháp hiện tại và mở lại thư mục.",
+  "folder.invalid": "Chọn thư mục gốc của gói emoji.",
+  "folder.tooLarge": "Dữ liệu gói trong thư mục này vượt quá giới hạn kích thước hoặc số lượng tệp.",
+  "folder.writeFailed": "Không thể lưu vào thư mục. Các tệp đã thay đổi được khôi phục.",
+  "folder.rollbackFailed": "Lưu thất bại và không thể khôi phục một số tệp. Hãy kiểm tra thư mục.",
+  "folder.sessionOnly": "Kết nối thư mục chỉ có hiệu lực khi trang này đang mở. Hãy mở lại sau khi tải lại trang.",
+  "folder.saved": "Đã lưu vào “{name}”.",
+  "folder.unsaved": "Có thay đổi chưa được lưu vào thư mục.",
+  "folder.upToDate": "Đã lưu trong thư mục."
 }

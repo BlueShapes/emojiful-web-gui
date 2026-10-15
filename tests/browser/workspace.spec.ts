@@ -104,7 +104,7 @@ test('imports a matching ID as a separate pack, deletes only the confirmed draft
   await page
     .getByLabel(ja['field.packName'], { exact: true })
     .fill('元のパック');
-  await page.locator('input[type=file]').setInputFiles({
+  await page.getByLabel(ja.packFile, { exact: true }).setInputFiles({
     name: 'imported.json',
     mimeType: 'application/json',
     buffer: Buffer.from(

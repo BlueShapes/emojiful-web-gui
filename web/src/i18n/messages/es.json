@@ -139,5 +139,21 @@
   "packs.created": "Se ha creado un paquete nuevo.",
   "packs.deleted": "Se ha eliminado el paquete.",
   "sidebar.hide": "Contraer barra lateral",
-  "sidebar.show": "Expandir barra lateral"
+  "sidebar.show": "Expandir barra lateral",
+  "folder.open": "Abrir carpeta",
+  "folder.input": "Carpeta del paquete",
+  "folder.save": "Guardar en la carpeta",
+  "folder.linked": "Carpeta vinculada: {name}",
+  "folder.directHelp": "Usa «Guardar en la carpeta» para aplicar los cambios a la carpeta original.",
+  "folder.readOnly": "Este navegador solo puede leer carpetas. Exporta un ZIP después de editar.",
+  "folder.permission": "No se concedió acceso a la carpeta. Permítelo en el navegador e inténtalo de nuevo.",
+  "folder.conflict": "La carpeta cambió externamente o el destino contiene otro archivo. Conserva el borrador actual y vuelve a abrir la carpeta.",
+  "folder.invalid": "Selecciona la carpeta raíz de un paquete de emojis.",
+  "folder.tooLarge": "Los datos del paquete superan el límite de tamaño o de cantidad de archivos.",
+  "folder.writeFailed": "No se pudo guardar en la carpeta. Se restauraron los archivos modificados.",
+  "folder.rollbackFailed": "Error al guardar y algunos archivos no pudieron restaurarse. Revisa la carpeta.",
+  "folder.sessionOnly": "La conexión con la carpeta solo dura mientras esta página esté abierta. Vuelve a abrirla después de recargar.",
+  "folder.saved": "Guardado en «{name}».",
+  "folder.unsaved": "Hay cambios sin guardar en la carpeta.",
+  "folder.upToDate": "Guardado en la carpeta."
 }

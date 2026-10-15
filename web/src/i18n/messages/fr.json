@@ -139,5 +139,21 @@
   "packs.created": "Nouveau pack créé.",
   "packs.deleted": "Pack supprimé.",
   "sidebar.hide": "Réduire la barre latérale",
-  "sidebar.show": "Développer la barre latérale"
+  "sidebar.show": "Développer la barre latérale",
+  "folder.open": "Ouvrir un dossier",
+  "folder.input": "Dossier du pack",
+  "folder.save": "Enregistrer dans le dossier",
+  "folder.linked": "Dossier associé : {name}",
+  "folder.directHelp": "Utilisez « Enregistrer dans le dossier » pour appliquer les modifications au dossier d’origine.",
+  "folder.readOnly": "Ce navigateur peut uniquement lire les dossiers. Exportez un ZIP après modification.",
+  "folder.permission": "L’accès au dossier n’a pas été autorisé. Autorisez-le dans le navigateur, puis réessayez.",
+  "folder.conflict": "Le dossier a été modifié ailleurs ou la destination contient un autre fichier. Conservez le brouillon actuel et rouvrez le dossier.",
+  "folder.invalid": "Sélectionnez le dossier racine d’un pack d’emojis.",
+  "folder.tooLarge": "Les données du pack dans ce dossier dépassent la limite de taille ou de nombre de fichiers.",
+  "folder.writeFailed": "Impossible d’enregistrer dans le dossier. Les fichiers modifiés ont été restaurés.",
+  "folder.rollbackFailed": "Échec de l’enregistrement et certains fichiers n’ont pas pu être restaurés. Vérifiez le dossier.",
+  "folder.sessionOnly": "L’association au dossier reste active uniquement tant que cette page est ouverte. Rouvrez-le après avoir actualisé la page.",
+  "folder.saved": "Enregistré dans « {name} ».",
+  "folder.unsaved": "Des modifications ne sont pas encore enregistrées dans le dossier.",
+  "folder.upToDate": "Enregistré dans le dossier."
 }

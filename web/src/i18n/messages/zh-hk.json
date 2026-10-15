@@ -139,5 +139,21 @@
   "packs.created": "已建立新表情符號包。",
   "packs.deleted": "已刪除表情符號包。",
   "sidebar.hide": "收起側邊欄",
-  "sidebar.show": "展開側邊欄"
+  "sidebar.show": "展開側邊欄",
+  "folder.open": "開啟資料夾",
+  "folder.input": "表情包資料夾",
+  "folder.save": "儲存至資料夾",
+  "folder.linked": "已連結資料夾：{name}",
+  "folder.directHelp": "使用「儲存至資料夾」將變更套用至原始資料夾。",
+  "folder.readOnly": "此瀏覽器只可讀取資料夾。編輯後請匯出 ZIP。",
+  "folder.permission": "未獲准存取資料夾。請在瀏覽器中允許存取，然後再試一次。",
+  "folder.conflict": "資料夾已在外部變更，或目的地已有其他檔案。請保留目前草稿並重新開啟資料夾。",
+  "folder.invalid": "請選取表情包的根資料夾。",
+  "folder.tooLarge": "此資料夾內的表情包資料超出大小或檔案數量上限。",
+  "folder.writeFailed": "無法儲存至資料夾。已還原變更過的檔案。",
+  "folder.rollbackFailed": "儲存時發生錯誤，部分檔案無法還原。請檢查資料夾。",
+  "folder.sessionOnly": "資料夾連結只會在此頁面開啟時有效。重新載入頁面後請重新開啟資料夾。",
+  "folder.saved": "已儲存至「{name}」。",
+  "folder.unsaved": "有變更尚未儲存至資料夾。",
+  "folder.upToDate": "已儲存至資料夾。"
 }

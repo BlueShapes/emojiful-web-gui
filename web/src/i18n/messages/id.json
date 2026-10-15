@@ -139,5 +139,21 @@
   "packs.created": "Paket baru dibuat.",
   "packs.deleted": "Paket dihapus.",
   "sidebar.hide": "Ciutkan bilah samping",
-  "sidebar.show": "Luaskan bilah samping"
+  "sidebar.show": "Luaskan bilah samping",
+  "folder.open": "Buka folder",
+  "folder.input": "Folder paket",
+  "folder.save": "Simpan ke folder",
+  "folder.linked": "Folder tertaut: {name}",
+  "folder.directHelp": "Gunakan “Simpan ke folder” untuk menerapkan perubahan ke folder asli.",
+  "folder.readOnly": "Browser ini hanya dapat membaca folder. Ekspor ZIP setelah mengedit.",
+  "folder.permission": "Akses ke folder tidak diizinkan. Izinkan akses di browser lalu coba lagi.",
+  "folder.conflict": "Folder berubah dari luar atau lokasi tujuan berisi file lain. Pertahankan draf saat ini dan buka kembali folder.",
+  "folder.invalid": "Pilih folder utama paket emoji.",
+  "folder.tooLarge": "Data paket di folder ini melebihi batas ukuran atau jumlah file.",
+  "folder.writeFailed": "Tidak dapat menyimpan ke folder. File yang diubah telah dipulihkan.",
+  "folder.rollbackFailed": "Penyimpanan gagal dan beberapa file tidak dapat dipulihkan. Periksa folder.",
+  "folder.sessionOnly": "Koneksi ke folder hanya berlaku selama halaman ini terbuka. Buka kembali setelah memuat ulang halaman.",
+  "folder.saved": "Disimpan ke “{name}”.",
+  "folder.unsaved": "Ada perubahan yang belum disimpan ke folder.",
+  "folder.upToDate": "Tersimpan di folder."
 }

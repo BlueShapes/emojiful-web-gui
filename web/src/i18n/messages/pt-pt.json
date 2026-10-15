@@ -139,5 +139,21 @@
   "packs.created": "Foi criado um novo pacote.",
   "packs.deleted": "O pacote foi eliminado.",
   "sidebar.hide": "Recolher barra lateral",
-  "sidebar.show": "Expandir barra lateral"
+  "sidebar.show": "Expandir barra lateral",
+  "folder.open": "Abrir pasta",
+  "folder.input": "Pasta do pacote",
+  "folder.save": "Guardar na pasta",
+  "folder.linked": "Pasta ligada: {name}",
+  "folder.directHelp": "Utilize «Guardar na pasta» para aplicar as alterações à pasta original.",
+  "folder.readOnly": "Este navegador só pode ler pastas. Exporte um ZIP depois de editar.",
+  "folder.permission": "O acesso à pasta não foi autorizado. Permita o acesso no navegador e tente novamente.",
+  "folder.conflict": "A pasta foi alterada externamente ou o destino contém outro ficheiro. Mantenha o rascunho atual e volte a abrir a pasta.",
+  "folder.invalid": "Selecione a pasta raiz de um pacote de emojis.",
+  "folder.tooLarge": "Os dados do pacote nesta pasta excedem o limite de tamanho ou de número de ficheiros.",
+  "folder.writeFailed": "Não foi possível guardar na pasta. Os ficheiros alterados foram restaurados.",
+  "folder.rollbackFailed": "Ocorreu um erro ao guardar e alguns ficheiros não puderam ser restaurados. Verifique a pasta.",
+  "folder.sessionOnly": "A ligação à pasta só permanece ativa enquanto esta página estiver aberta. Volte a abri-la depois de atualizar a página.",
+  "folder.saved": "Guardado em «{name}».",
+  "folder.unsaved": "Existem alterações ainda não guardadas na pasta.",
+  "folder.upToDate": "Guardado na pasta."
 }

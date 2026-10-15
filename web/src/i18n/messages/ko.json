@@ -139,5 +139,21 @@
   "packs.created": "새 팩을 만들었습니다.",
   "packs.deleted": "팩을 삭제했습니다.",
   "sidebar.hide": "사이드바 접기",
-  "sidebar.show": "사이드바 펼치기"
+  "sidebar.show": "사이드바 펼치기",
+  "folder.open": "폴더 열기",
+  "folder.input": "팩 폴더",
+  "folder.save": "폴더에 저장",
+  "folder.linked": "연결된 폴더: {name}",
+  "folder.directHelp": "원래 폴더에 변경 사항을 적용하려면 “폴더에 저장”을 사용하세요.",
+  "folder.readOnly": "이 브라우저에서는 폴더를 읽기만 할 수 있습니다. 수정한 후 ZIP을 내보내세요.",
+  "folder.permission": "폴더 접근이 허용되지 않았습니다. 브라우저에서 접근을 허용한 다음 다시 시도하세요.",
+  "folder.conflict": "폴더가 외부에서 변경되었거나 저장 위치에 다른 파일이 있습니다. 현재 초안을 유지하고 폴더를 다시 여세요.",
+  "folder.invalid": "이모지 팩의 루트 폴더를 선택하세요.",
+  "folder.tooLarge": "이 폴더의 팩 데이터가 크기 또는 파일 개수 제한을 초과합니다.",
+  "folder.writeFailed": "폴더에 저장하지 못했습니다. 변경된 파일을 복원했습니다.",
+  "folder.rollbackFailed": "저장 중 오류가 발생해 일부 파일을 복원하지 못했습니다. 폴더를 확인하세요.",
+  "folder.sessionOnly": "폴더 연결은 이 페이지가 열려 있는 동안에만 유지됩니다. 페이지를 새로고침한 후 다시 여세요.",
+  "folder.saved": "“{name}”에 저장했습니다.",
+  "folder.unsaved": "폴더에 아직 저장되지 않은 변경 사항이 있습니다.",
+  "folder.upToDate": "폴더에 저장되었습니다."
 }

@@ -139,5 +139,21 @@
   "packs.created": "Nový balíček byl vytvořen.",
   "packs.deleted": "Balíček byl smazán.",
   "sidebar.hide": "Sbalit postranní panel",
-  "sidebar.show": "Rozbalit postranní panel"
+  "sidebar.show": "Rozbalit postranní panel",
+  "folder.open": "Otevřít složku",
+  "folder.input": "Složka balíčku",
+  "folder.save": "Uložit do složky",
+  "folder.linked": "Propojená složka: {name}",
+  "folder.directHelp": "Změny v původní složce použijte tlačítkem „Uložit do složky“.",
+  "folder.readOnly": "Tento prohlížeč umí složky pouze číst. Po úpravách exportujte ZIP.",
+  "folder.permission": "Přístup ke složce nebyl povolen. Povolte jej v prohlížeči a zkuste to znovu.",
+  "folder.conflict": "Složka byla externě změněna nebo cíl obsahuje jiný soubor. Zachovejte aktuální koncept a složku znovu otevřete.",
+  "folder.invalid": "Vyberte kořenovou složku balíčku emoji.",
+  "folder.tooLarge": "Data balíčku v této složce překračují limit velikosti nebo počtu souborů.",
+  "folder.writeFailed": "Do složky se nepodařilo uložit. Změněné soubory byly obnoveny.",
+  "folder.rollbackFailed": "Ukládání selhalo a některé soubory se nepodařilo obnovit. Zkontrolujte složku.",
+  "folder.sessionOnly": "Propojení se složkou platí jen po dobu otevření této stránky. Po obnovení stránky ji otevřete znovu.",
+  "folder.saved": "Uloženo do „{name}“.",
+  "folder.unsaved": "Ve složce jsou neuložené změny.",
+  "folder.upToDate": "Uloženo do složky."
 }

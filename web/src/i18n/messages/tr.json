@@ -139,5 +139,21 @@
   "packs.created": "Yeni paket oluşturuldu.",
   "packs.deleted": "Paket silindi.",
   "sidebar.hide": "Kenar çubuğunu daralt",
-  "sidebar.show": "Kenar çubuğunu genişlet"
+  "sidebar.show": "Kenar çubuğunu genişlet",
+  "folder.open": "Klasörü aç",
+  "folder.input": "Paket klasörü",
+  "folder.save": "Klasöre kaydet",
+  "folder.linked": "Bağlı klasör: {name}",
+  "folder.directHelp": "Değişiklikleri özgün klasöre uygulamak için “Klasöre kaydet” seçeneğini kullanın.",
+  "folder.readOnly": "Bu tarayıcı klasörleri yalnızca okuyabilir. Düzenledikten sonra ZIP dışa aktarın.",
+  "folder.permission": "Klasör erişimine izin verilmedi. Tarayıcıda erişime izin verip tekrar deneyin.",
+  "folder.conflict": "Klasör dışarıdan değiştirildi veya hedefte başka bir dosya var. Geçerli taslağı koruyun ve klasörü yeniden açın.",
+  "folder.invalid": "Bir emoji paketinin kök klasörünü seçin.",
+  "folder.tooLarge": "Bu klasördeki paket verileri boyut veya dosya sayısı sınırını aşıyor.",
+  "folder.writeFailed": "Klasöre kaydedilemedi. Değiştirilen dosyalar geri yüklendi.",
+  "folder.rollbackFailed": "Kaydetme başarısız oldu ve bazı dosyalar geri yüklenemedi. Klasörü kontrol edin.",
+  "folder.sessionOnly": "Klasör bağlantısı yalnızca bu sayfa açıkken geçerlidir. Sayfayı yeniledikten sonra klasörü yeniden açın.",
+  "folder.saved": "“{name}” konumuna kaydedildi.",
+  "folder.unsaved": "Klasöre henüz kaydedilmemiş değişiklikler var.",
+  "folder.upToDate": "Klasöre kaydedildi."
 }
