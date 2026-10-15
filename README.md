@@ -5,6 +5,11 @@ Astroが生成した同じHTML・Reactコンポーネント・JavaScriptを、Cl
 
 正規の公開先（日本語）: [https://emojiful-gui.aosankaku.net/ja/](https://emojiful-gui.aosankaku.net/ja/)
 
+ロゴ・画面内の装飾・faviconには同じスマイルのSVG（`web/public/favicon.svg`）を使用します。
+文字やOSの絵文字フォントを使わず、画像を同梱して端末による図柄の違いを防いでいます。
+faviconのPNG代替画像とホーム画面用アイコンも同じSVGから生成した画像です。外部の画像配信サービスには依存しません。
+図柄を変更する場合は、SVGを編集後に `bun run icons` でPNGを再生成してください（初回のみ `bunx playwright install chromium-headless-shell` が必要です）。通常のビルドではブラウザーは不要です。
+
 ## できること
 
 - 画像URL・絵文字名・カテゴリーを登録、編集、削除

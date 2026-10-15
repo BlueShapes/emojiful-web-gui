@@ -17,7 +17,9 @@ const info = locales.find((item) => item.code === locale)!;
     <meta name="theme-color" content="#edf3ee" />
     <meta name="description" content={translate(locale, 'page.description')} />
     <title>Emojiful — Pack Studio</title>
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
+    <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     {locales.map((item) => (
       <link rel="alternate" hreflang={item.htmlLang} href={`/${item.code}/`} />
     ))}

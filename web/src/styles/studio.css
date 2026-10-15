@@ -133,24 +133,10 @@ p {
   letter-spacing: -1.1px;
 }
 .brand-mark {
-  display: flex;
-  position: relative;
-  align-items: center;
-  justify-content: center;
-  background: var(--green);
-  color: var(--yellow);
+  display: block;
+  flex-shrink: 0;
   width: 42px;
   height: 42px;
-  border-radius: 13px;
-  font-size: 38px;
-  font-weight: 800;
-  padding-bottom: 7px;
-}
-.brand-mark span {
-  position: absolute;
-  font-size: 18px;
-  right: 5px;
-  bottom: 6px;
 }
 .brand-sub {
   display: block;
@@ -397,27 +383,17 @@ p {
 }
 .art-face {
   position: absolute;
-  display: grid;
-  place-items: center;
   right: 40px;
   top: 0;
-  width: 80px;
-  height: 86px;
-  background: var(--yellow);
-  border: 1px solid #dfc66c;
-  border-radius: 24px;
+  width: 88px;
+  height: 88px;
   transform: rotate(12deg);
-  font-size: 38px;
-  font-family: Consolas, monospace;
-  color: var(--green-dark);
-  letter-spacing: -4px;
-  box-shadow: 5px 7px 0 #e5e9da;
+  filter: drop-shadow(4px 6px 0 #e5e9da);
 }
 .art-leaf {
   position: absolute;
   left: 19px;
   top: 22px;
-  font-size: 66px;
   color: #769a79;
   transform: rotate(-12deg);
 }
@@ -426,7 +402,6 @@ p {
   right: 6px;
   bottom: 34px;
   color: #c2a13d;
-  font-size: 30px;
 }
 .art-label {
   position: absolute;
@@ -657,15 +632,9 @@ p {
   position: relative;
   margin-bottom: 23px;
 }
-.empty-square {
+.empty-face {
   width: 75px;
   height: 75px;
-  background: #e5ecdd;
-  border: 1px solid #ccdac4;
-  border-radius: 20px;
-  display: grid;
-  place-items: center;
-  color: #61805a;
   transform: rotate(-8deg);
   position: absolute;
   left: 6px;
@@ -678,10 +647,10 @@ p {
   width: 30px;
   height: 30px;
   border-radius: 10px;
-  background: var(--yellow);
-  font-size: 25px;
-  line-height: 28px;
-  color: var(--green);
+  display: grid;
+  place-items: center;
+  background: var(--green);
+  color: var(--surface);
   border: 3px solid var(--paper);
 }
 .empty-state h3 {
@@ -1010,7 +979,6 @@ dialog::backdrop {
   .brand-mark {
     width: 36px;
     height: 36px;
-    font-size: 32px;
   }
   .brand-sub {
     font-size: 7px;
@@ -1098,19 +1066,19 @@ dialog::backdrop {
   }
   .art-face {
     width: 55px;
-    height: 62px;
-    font-size: 29px;
-    border-radius: 16px;
+    height: 55px;
     top: 3px;
     right: 9px;
   }
   .art-leaf {
-    font-size: 38px;
+    width: 38px;
+    height: 38px;
     top: 33px;
     left: -2px;
   }
   .art-spark {
-    font-size: 22px;
+    width: 22px;
+    height: 22px;
     bottom: 22px;
     right: 0;
   }

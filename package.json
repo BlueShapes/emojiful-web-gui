@@ -9,6 +9,7 @@
     "node": ">=22.12.0"
   },
   "scripts": {
+    "icons": "node scripts/generate-icons.mjs",
     "dev": "astro dev --root web --host 127.0.0.1",
     "build": "astro build --root web",
     "preview": "astro preview --root web --host 127.0.0.1",

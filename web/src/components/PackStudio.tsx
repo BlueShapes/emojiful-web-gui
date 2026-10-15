@@ -15,7 +15,8 @@ import {
   Pencil,
   Plus,
   Search,
-  Sprout,
+  Sparkle,
+  Sparkles,
   Trash2,
   Upload,
   X,
@@ -304,9 +305,14 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
           aria-label={t('home')}
           dir="ltr"
         >
-          <span className="brand-mark">
-            e<span>•</span>
-          </span>
+          <img
+            className="brand-mark"
+            src="/favicon.svg"
+            width={42}
+            height={42}
+            alt=""
+            aria-hidden="true"
+          />
           <span>
             emojiful<span className="brand-sub">PACK STUDIO</span>
           </span>
@@ -489,11 +495,15 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
               <p>{t('intro.description')}</p>
             </div>
             <div className="intro-art" aria-hidden="true">
-              <span className="art-leaf">✳</span>
-              <span className="art-face" dir="ltr">
-                :)
-              </span>
-              <span className="art-spark">✦</span>
+              <Sparkles className="art-leaf" size={60} strokeWidth={1.5} />
+              <img
+                className="art-face"
+                src="/favicon.svg"
+                width={88}
+                height={88}
+                alt=""
+              />
+              <Sparkle className="art-spark" size={28} fill="currentColor" />
               <span className="art-label">{t('intro.art')}</span>
             </div>
           </div>
@@ -637,10 +647,16 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
             ) : (
               <div className="empty-state">
                 <div className="empty-illustration" aria-hidden="true">
-                  <span className="empty-square">
-                    <Sprout size={40} />
+                  <img
+                    className="empty-face"
+                    src="/favicon.svg"
+                    width={75}
+                    height={75}
+                    alt=""
+                  />
+                  <span className="empty-small">
+                    <Plus size={18} />
                   </span>
-                  <span className="empty-small">+</span>
                 </div>
                 <span className="eyebrow">{t('empty.eyebrow')}</span>
                 <h3>{t('empty.title')}</h3>
