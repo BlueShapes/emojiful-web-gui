@@ -1000,6 +1000,21 @@ dialog::backdrop {
 .bulk-add-row {
   align-self: flex-start;
 }
+.nextcloud-input {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+}
+.nextcloud-command {
+  font-family: Consolas, monospace;
+  font-size: 11px !important;
+  overflow-wrap: anywhere;
+  background: var(--paper);
+}
+.nextcloud-input .format-help p:first-child {
+  margin-top: 0;
+}
 .file-label {
   position: relative;
   flex-direction: row !important;

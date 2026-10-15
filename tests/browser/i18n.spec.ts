@@ -120,6 +120,24 @@ test('all 22 static routes hydrate in their language under production CSP', asyn
       locale.code,
     ).toBe(true);
     await page
+      .getByLabel(text['bulk.mode'], { exact: true })
+      .selectOption('nextcloud');
+    await page
+      .getByLabel(text['nextcloud.shareUrl'], { exact: true })
+      .fill('https://cloud.example/s/Share123');
+    await expect(
+      page.getByLabel(text['nextcloud.command'], { exact: true }),
+    ).toHaveValue(/^curl\.exe /);
+    await page
+      .getByLabel(text['nextcloud.output'], { exact: true })
+      .fill('<html>Sign in</html>');
+    await page
+      .getByRole('button', { name: text['nextcloud.review'], exact: true })
+      .click();
+    await expect(page.getByRole('alert')).toHaveText(
+      text['nextcloud.invalidXml'],
+    );
+    await page
       .getByRole('button', { name: text.closeEditor, exact: true })
       .click();
     expect(

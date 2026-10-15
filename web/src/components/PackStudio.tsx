@@ -37,6 +37,8 @@ import {
 import type { BulkFormat, EmojiEntry, EmojiPack } from '../lib/pack';
 import { importBulkTable } from '../lib/bulk-table';
 import BulkTable, { createBulkTableRows } from './BulkTable';
+import NextcloudInput, { emptyNextcloudDraft } from './NextcloudInput';
+import { importNextcloudListing, parseNextcloudFolder } from '../lib/nextcloud';
 import {
   addPack,
   createWorkspace,
@@ -146,8 +148,11 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
   const [bulk, setBulk] = useState('');
   const [bulkCategory, setBulkCategory] = useState('Custom');
   const [bulkFormat, setBulkFormat] = useState<BulkFormat>('auto');
-  const [bulkMode, setBulkMode] = useState<'text' | 'table'>('text');
+  const [bulkMode, setBulkMode] = useState<'text' | 'table' | 'nextcloud'>(
+    'text',
+  );
   const [bulkRows, setBulkRows] = useState(createBulkTableRows);
+  const [nextcloudDraft, setNextcloudDraft] = useState(emptyNextcloudDraft);
   const [panelError, setPanelError] = useState('');
   const [installed, setInstalled] = useState<InstalledPack[]>([]);
   const [busy, setBusy] = useState(false);
@@ -412,6 +417,7 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
     setBulkFormat('auto');
     setBulkMode('text');
     setBulkRows(createBulkTableRows());
+    setNextcloudDraft(emptyNextcloudDraft());
     setPanelError('');
     setConfirmation(null);
   }
@@ -589,6 +595,26 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
   function saveBulk(event: SubmitEvent) {
     event.preventDefault();
     try {
+      if (bulkMode === 'nextcloud') {
+        const folder = parseNextcloudFolder(
+          nextcloudDraft.shareUrl,
+          nextcloudDraft.folderPath,
+        );
+        const entries = importNextcloudListing(
+          nextcloudDraft.listing,
+          folder,
+          bulkCategory,
+        );
+        setBulkRows(
+          entries.map((emoji, index) => ({
+            ...emoji,
+            id: `nextcloud-${index}`,
+          })),
+        );
+        setBulkMode('table');
+        setPanelError('');
+        return;
+      }
       const entries =
         bulkMode === 'table'
           ? importBulkTable(bulkRows, bulkCategory)
@@ -1260,7 +1286,7 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
 
       <dialog
         ref={modalRef}
-        className={`editor-dialog${panel === 'bulk' && bulkMode === 'table' ? ' bulk-table-dialog' : ''}`}
+        className={`editor-dialog${panel === 'bulk' && bulkMode !== 'text' ? ' bulk-table-dialog' : ''}`}
         onCancel={() => setPanel(null)}
         onClose={() => setPanel(null)}
       >
@@ -1372,12 +1398,15 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
                 aria-label={t('bulk.mode')}
                 value={bulkMode}
                 onChange={(event) => {
-                  setBulkMode(event.target.value as 'text' | 'table');
+                  setBulkMode(
+                    event.target.value as 'text' | 'table' | 'nextcloud',
+                  );
                   setPanelError('');
                 }}
               >
                 <option value="text">{t('bulk.textMode')}</option>
                 <option value="table">{t('bulk.tableMode')}</option>
+                <option value="nextcloud">{t('nextcloud.mode')}</option>
               </select>
             </label>
             <div className="form-columns">
@@ -1409,7 +1438,17 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
                 />
               </label>
             </div>
-            {bulkMode === 'table' ? (
+            {bulkMode === 'nextcloud' ? (
+              <NextcloudInput
+                locale={locale}
+                draft={nextcloudDraft}
+                onChange={(draft) => {
+                  setNextcloudDraft(draft);
+                  setPanelError('');
+                }}
+                onError={(error) => setPanelError(errorMessage(error, locale))}
+              />
+            ) : bulkMode === 'table' ? (
               <BulkTable
                 locale={locale}
                 rows={bulkRows}
@@ -1477,7 +1516,9 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
               </button>
               <button className="button primary" type="submit">
                 <Plus size={16} />
-                {t('bulk.add')}
+                {bulkMode === 'nextcloud'
+                  ? t('nextcloud.review')
+                  : t('bulk.add')}
               </button>
             </div>
           </form>
