@@ -35,6 +35,8 @@ import {
   validatePack,
 } from '../lib/pack';
 import type { BulkFormat, EmojiEntry, EmojiPack } from '../lib/pack';
+import { importBulkTable } from '../lib/bulk-table';
+import BulkTable, { createBulkTableRows } from './BulkTable';
 import {
   addPack,
   createWorkspace,
@@ -144,6 +146,8 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
   const [bulk, setBulk] = useState('');
   const [bulkCategory, setBulkCategory] = useState('Custom');
   const [bulkFormat, setBulkFormat] = useState<BulkFormat>('auto');
+  const [bulkMode, setBulkMode] = useState<'text' | 'table'>('text');
+  const [bulkRows, setBulkRows] = useState(createBulkTableRows);
   const [panelError, setPanelError] = useState('');
   const [installed, setInstalled] = useState<InstalledPack[]>([]);
   const [busy, setBusy] = useState(false);
@@ -406,6 +410,8 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
     setBulk('');
     setBulkCategory('Custom');
     setBulkFormat('auto');
+    setBulkMode('text');
+    setBulkRows(createBulkTableRows());
     setPanelError('');
     setConfirmation(null);
   }
@@ -583,14 +589,18 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
   function saveBulk(event: SubmitEvent) {
     event.preventDefault();
     try {
-      const entries = importBulk(bulk, bulkCategory, bulkFormat);
+      const entries =
+        bulkMode === 'table'
+          ? importBulkTable(bulkRows, bulkCategory)
+          : importBulk(bulk, bulkCategory, bulkFormat);
       // Validate entries even while metadata is being edited.
       appendEntries({ ...emptyPack(), emojis: pack.emojis }, entries);
       editActivePack((current) =>
         validateDraft({ ...current, emojis: [...current.emojis, ...entries] }),
       );
       setPanel(null);
-      setBulk('');
+      if (bulkMode === 'table') setBulkRows(createBulkTableRows());
+      else setBulk('');
       notify(t('notice.bulkAdded', { count: entries.length }));
     } catch (error) {
       setPanelError(errorMessage(error, locale));
@@ -1250,7 +1260,7 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
 
       <dialog
         ref={modalRef}
-        className="editor-dialog"
+        className={`editor-dialog${panel === 'bulk' && bulkMode === 'table' ? ' bulk-table-dialog' : ''}`}
         onCancel={() => setPanel(null)}
         onClose={() => setPanel(null)}
       >
@@ -1356,23 +1366,38 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
         )}
         {panel === 'bulk' && (
           <form className="editor-form" onSubmit={saveBulk}>
-            <p className="form-intro">{t('bulk.description')}</p>
+            <label>
+              {t('bulk.mode')}
+              <select
+                aria-label={t('bulk.mode')}
+                value={bulkMode}
+                onChange={(event) => {
+                  setBulkMode(event.target.value as 'text' | 'table');
+                  setPanelError('');
+                }}
+              >
+                <option value="text">{t('bulk.textMode')}</option>
+                <option value="table">{t('bulk.tableMode')}</option>
+              </select>
+            </label>
             <div className="form-columns">
-              <label>
-                {t('bulk.format')}
-                <select
-                  value={bulkFormat}
-                  onChange={(event) =>
-                    setBulkFormat(event.target.value as BulkFormat)
-                  }
-                >
-                  <option value="auto">{t('bulk.auto')}</option>
-                  <option value="csv">CSV</option>
-                  <option value="tsv">TSV</option>
-                  <option value="json">JSON</option>
-                  <option value="urls">{t('bulk.urls')}</option>
-                </select>
-              </label>
+              {bulkMode === 'text' && (
+                <label>
+                  {t('bulk.format')}
+                  <select
+                    value={bulkFormat}
+                    onChange={(event) =>
+                      setBulkFormat(event.target.value as BulkFormat)
+                    }
+                  >
+                    <option value="auto">{t('bulk.auto')}</option>
+                    <option value="csv">CSV</option>
+                    <option value="tsv">TSV</option>
+                    <option value="json">JSON</option>
+                    <option value="urls">{t('bulk.urls')}</option>
+                  </select>
+                </label>
+              )}
               <label>
                 {t('bulk.defaultCategory')}
                 <input
@@ -1384,50 +1409,64 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
                 />
               </label>
             </div>
-            <label>
-              {t('bulk.data')}
-              <textarea
-                autoFocus
-                required
-                rows={8}
-                className="bulk-input"
-                dir="ltr"
-                value={bulk}
-                placeholder={
-                  'name,url,category\nhappy_cat,https://example.com/cat.png,Animals\nwave,https://example.com/wave.gif,Reactions'
-                }
-                onChange={(event) => setBulk(event.target.value)}
+            {bulkMode === 'table' ? (
+              <BulkTable
+                locale={locale}
+                rows={bulkRows}
+                defaultCategory={bulkCategory}
+                onChange={setBulkRows}
               />
-            </label>
-            <label className="file-label">
-              <Upload size={15} />
-              {t('bulk.file')}
-              <input
-                type="file"
-                accept=".csv,.tsv,.txt,.json"
-                onChange={async (event) => {
-                  const file = event.target.files?.[0];
-                  if (!file) return;
-                  try {
-                    if (file.size > MAX_IMPORT_BYTES)
-                      throw new LocalizedError('error.fileSize');
-                    setBulk(await file.text());
-                    if (/\.tsv$/i.test(file.name)) setBulkFormat('tsv');
-                    else if (/\.csv$/i.test(file.name)) setBulkFormat('csv');
-                    else if (/\.json$/i.test(file.name)) setBulkFormat('json');
-                    else setBulkFormat('urls');
-                  } catch (error) {
-                    setPanelError(errorMessage(error, locale));
-                  }
-                  event.target.value = '';
-                }}
-              />
-            </label>
-            <div className="format-help">
-              <strong>{t('bulk.hints')}</strong>
-              <p>{t('bulk.csvHelp')}</p>
-              <p>{t('bulk.urlHelp')}</p>
-            </div>
+            ) : (
+              <>
+                <p className="form-intro">{t('bulk.description')}</p>
+                <label>
+                  {t('bulk.data')}
+                  <textarea
+                    autoFocus
+                    required
+                    rows={8}
+                    className="bulk-input"
+                    dir="ltr"
+                    value={bulk}
+                    placeholder={
+                      'name,url,category\nhappy_cat,https://example.com/cat.png,Animals\nwave,https://example.com/wave.gif,Reactions'
+                    }
+                    onChange={(event) => setBulk(event.target.value)}
+                  />
+                </label>
+                <label className="file-label">
+                  <Upload size={15} />
+                  {t('bulk.file')}
+                  <input
+                    type="file"
+                    accept=".csv,.tsv,.txt,.json"
+                    onChange={async (event) => {
+                      const file = event.target.files?.[0];
+                      if (!file) return;
+                      try {
+                        if (file.size > MAX_IMPORT_BYTES)
+                          throw new LocalizedError('error.fileSize');
+                        setBulk(await file.text());
+                        if (/\.tsv$/i.test(file.name)) setBulkFormat('tsv');
+                        else if (/\.csv$/i.test(file.name))
+                          setBulkFormat('csv');
+                        else if (/\.json$/i.test(file.name))
+                          setBulkFormat('json');
+                        else setBulkFormat('urls');
+                      } catch (error) {
+                        setPanelError(errorMessage(error, locale));
+                      }
+                      event.target.value = '';
+                    }}
+                  />
+                </label>
+                <div className="format-help">
+                  <strong>{t('bulk.hints')}</strong>
+                  <p>{t('bulk.csvHelp')}</p>
+                  <p>{t('bulk.urlHelp')}</p>
+                </div>
+              </>
+            )}
             <div className="dialog-actions">
               <button
                 className="button secondary"

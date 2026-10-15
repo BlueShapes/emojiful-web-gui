@@ -30,10 +30,16 @@ describe('table bulk input', () => {
       '取り込むデータを入力',
     );
     expect(() =>
-      importBulkTable([blank(), cat, { ...blank(), category: 'Animals' }], 'Custom'),
+      importBulkTable(
+        [blank(), cat, { ...blank(), category: 'Animals' }],
+        'Custom',
+      ),
     ).toThrow('3件目');
     expect(() =>
-      importBulkTable([blank(), { ...cat, url: 'javascript:alert(1)' }], 'Custom'),
+      importBulkTable(
+        [blank(), { ...cat, url: 'javascript:alert(1)' }],
+        'Custom',
+      ),
     ).toThrow('2件目');
   });
 

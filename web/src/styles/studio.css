@@ -919,6 +919,87 @@ dialog::backdrop {
   font-size: 11px !important;
   white-space: pre;
 }
+.bulk-table-dialog {
+  width: min(960px, calc(100% - 32px));
+}
+.bulk-table-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+.bulk-table-scroll {
+  width: 100%;
+  max-height: min(50vh, 420px);
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.bulk-table-scroll:focus-visible {
+  outline: 3px solid #b49832;
+  outline-offset: 3px;
+}
+.bulk-table {
+  width: 100%;
+  min-width: 700px;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 12px;
+}
+.bulk-table th,
+.bulk-table td {
+  padding: 4px;
+  text-align: start;
+  border-inline-end: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.bulk-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 11px 12px;
+  background: var(--sage);
+  font-weight: 650;
+}
+.bulk-table .bulk-row-number {
+  width: 44px;
+  padding-inline: 5px;
+  text-align: center;
+  color: var(--muted);
+}
+.bulk-table .bulk-url-column {
+  width: 42%;
+}
+.bulk-table .bulk-row-actions {
+  width: 42px;
+}
+.bulk-table tr > :last-child {
+  border-inline-end: 0;
+}
+.bulk-table tbody tr:last-child > * {
+  border-bottom: 0;
+}
+.bulk-table tbody tr:focus-within {
+  background: var(--paper);
+}
+.bulk-table input {
+  padding: 9px 7px;
+  border-color: transparent;
+  border-radius: 4px;
+  background: transparent;
+}
+.bulk-table input:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 0;
+}
+.bulk-table .icon-button {
+  width: 32px;
+  height: 32px;
+}
+.bulk-add-row {
+  align-self: flex-start;
+}
 .file-label {
   position: relative;
   flex-direction: row !important;

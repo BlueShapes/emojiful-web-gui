@@ -89,6 +89,36 @@ test('all 22 static routes hydrate in their language under production CSP', asyn
     await expect(page.getByRole('alert')).toHaveText(
       text['error.duplicate'].replace('{index}', '2').replace('{name}', 'cat'),
     );
+    await page.getByLabel(text['bulk.mode']).selectOption('table');
+    const tableRows = page.locator('.bulk-table tbody tr');
+    for (const index of [0, 2]) {
+      await tableRows.nth(index).getByRole('textbox').nth(0).fill('cat');
+      await tableRows
+        .nth(index)
+        .getByRole('textbox')
+        .nth(1)
+        .fill('https://example.com/cat.png');
+    }
+    await expect(
+      page.getByLabel(
+        text['bulk.cell']
+          .replace('{index}', '1')
+          .replace('{field}', text['field.emojiName']),
+        { exact: true },
+      ),
+    ).toHaveValue('cat');
+    await page
+      .getByRole('button', { name: text['bulk.add'], exact: true })
+      .click();
+    await expect(page.getByRole('alert')).toHaveText(
+      text['error.duplicate'].replace('{index}', '3').replace('{name}', 'cat'),
+    );
+    expect(
+      await page
+        .locator('.editor-dialog')
+        .evaluate((dialog) => dialog.scrollWidth <= dialog.clientWidth + 1),
+      locale.code,
+    ).toBe(true);
     await page
       .getByRole('button', { name: text.closeEditor, exact: true })
       .click();
