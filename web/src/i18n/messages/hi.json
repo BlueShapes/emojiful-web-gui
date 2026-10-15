@@ -131,5 +131,13 @@
   "mod.key.open": "स्थानीय Web GUI लिंक दिखाएं",
   "mod.chat.available": "Emojiful Web GUI: %s (खोलने के लिए क्लिक करें)",
   "mod.chat.open": "स्थानीय Web GUI खोलें",
-  "mod.chat.unavailable": "Emojiful Web GUI शुरू नहीं हो सका। विवरण के लिए गेम लॉग देखें।"
+  "mod.chat.unavailable": "Emojiful Web GUI शुरू नहीं हो सका। विवरण के लिए गेम लॉग देखें।",
+  "packs.switch": "पैक बदलें",
+  "packs.details": "पैक सेटिंग",
+  "packs.delete": "पैक हटाएं",
+  "packs.deleteConfirm": "क्या “{name}” हटाएं? इससे इस पैक का ड्राफ़्ट और इस ब्राउज़र में सहेजे गए इमोजी हट जाएंगे।",
+  "packs.created": "नया पैक बनाया गया।",
+  "packs.deleted": "पैक हटा दिया गया।",
+  "sidebar.hide": "साइडबार समेटें",
+  "sidebar.show": "साइडबार फैलाएं"
 }

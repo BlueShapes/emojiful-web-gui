@@ -131,5 +131,13 @@
   "mod.key.open": "Tunjukkan pautan Web GUI setempat",
   "mod.chat.available": "Emojiful Web GUI: %s (klik untuk buka)",
   "mod.chat.open": "Buka Web GUI setempat",
-  "mod.chat.unavailable": "Emojiful Web GUI tidak dapat dimulakan. Semak log permainan untuk mendapatkan butiran."
+  "mod.chat.unavailable": "Emojiful Web GUI tidak dapat dimulakan. Semak log permainan untuk mendapatkan butiran.",
+  "packs.switch": "Tukar pek",
+  "packs.details": "Tetapan pek",
+  "packs.delete": "Padam pek",
+  "packs.deleteConfirm": "Padam “{name}”? Draf pek ini dan emoji yang disimpan dalam pelayar ini akan dipadamkan.",
+  "packs.created": "Pek baharu telah dicipta.",
+  "packs.deleted": "Pek telah dipadamkan.",
+  "sidebar.hide": "Runtuhkan bar sisi",
+  "sidebar.show": "Kembangkan bar sisi"
 }

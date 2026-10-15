@@ -131,5 +131,13 @@
   "mod.key.open": "ローカルWeb GUIのリンクを表示",
   "mod.chat.available": "Emojiful Web GUI: %s（クリックして開く）",
   "mod.chat.open": "ローカルWeb GUIを開く",
-  "mod.chat.unavailable": "Emojiful Web GUIを起動できませんでした。詳細はゲームのログを確認してください。"
+  "mod.chat.unavailable": "Emojiful Web GUIを起動できませんでした。詳細はゲームのログを確認してください。",
+  "packs.switch": "パックを切り替え",
+  "packs.details": "パックの設定",
+  "packs.delete": "パックを削除",
+  "packs.deleteConfirm": "「{name}」を削除しますか？このブラウザーに保存した、このパックの下書きと絵文字が削除されます。",
+  "packs.created": "新しいパックを作成しました。",
+  "packs.deleted": "パックを削除しました。",
+  "sidebar.hide": "サイドバーを折りたたむ",
+  "sidebar.show": "サイドバーを開く"
 }

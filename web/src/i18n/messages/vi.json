@@ -131,5 +131,13 @@
   "mod.key.open": "Hiển thị liên kết GUI Web cục bộ",
   "mod.chat.available": "Emojiful Web GUI: %s (nhấp để mở)",
   "mod.chat.open": "Mở GUI Web cục bộ",
-  "mod.chat.unavailable": "Không thể khởi động Emojiful Web GUI. Xem nhật ký trò chơi để biết chi tiết."
+  "mod.chat.unavailable": "Không thể khởi động Emojiful Web GUI. Xem nhật ký trò chơi để biết chi tiết.",
+  "packs.switch": "Chuyển gói",
+  "packs.details": "Cài đặt gói",
+  "packs.delete": "Xóa gói",
+  "packs.deleteConfirm": "Xóa “{name}”? Thao tác này sẽ xóa bản nháp của gói cùng emoji được lưu trong trình duyệt này.",
+  "packs.created": "Đã tạo gói mới.",
+  "packs.deleted": "Đã xóa gói.",
+  "sidebar.hide": "Thu gọn thanh bên",
+  "sidebar.show": "Mở rộng thanh bên"
 }

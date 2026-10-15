@@ -131,5 +131,13 @@
   "mod.key.open": "Afișează linkul către Web GUI local",
   "mod.chat.available": "Emojiful Web GUI: %s (clic pentru deschidere)",
   "mod.chat.open": "Deschide Web GUI local",
-  "mod.chat.unavailable": "Emojiful Web GUI nu a putut porni. Consultă jurnalul jocului pentru detalii."
+  "mod.chat.unavailable": "Emojiful Web GUI nu a putut porni. Consultă jurnalul jocului pentru detalii.",
+  "packs.switch": "Schimbă pachetul",
+  "packs.details": "Setările pachetului",
+  "packs.delete": "Șterge pachetul",
+  "packs.deleteConfirm": "Ștergi „{name}”? Aceasta va șterge schița acestui pachet și emojiurile salvate în acest browser.",
+  "packs.created": "Pachet nou creat.",
+  "packs.deleted": "Pachet șters.",
+  "sidebar.hide": "Restrânge bara laterală",
+  "sidebar.show": "Extinde bara laterală"
 }

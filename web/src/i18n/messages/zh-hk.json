@@ -131,5 +131,13 @@
   "mod.key.open": "顯示本機 Web GUI 連結",
   "mod.chat.available": "Emojiful Web GUI：%s（點擊開啟）",
   "mod.chat.open": "開啟本機 Web GUI",
-  "mod.chat.unavailable": "無法啟動 Emojiful Web GUI。請查看遊戲記錄了解詳情。"
+  "mod.chat.unavailable": "無法啟動 Emojiful Web GUI。請查看遊戲記錄了解詳情。",
+  "packs.switch": "切換表情符號包",
+  "packs.details": "表情符號包設定",
+  "packs.delete": "刪除表情符號包",
+  "packs.deleteConfirm": "要刪除「{name}」嗎？這會移除此表情符號包的草稿，以及儲存在此瀏覽器中的表情符號。",
+  "packs.created": "已建立新表情符號包。",
+  "packs.deleted": "已刪除表情符號包。",
+  "sidebar.hide": "收起側邊欄",
+  "sidebar.show": "展開側邊欄"
 }

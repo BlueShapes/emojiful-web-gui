@@ -187,7 +187,48 @@ p {
   margin: 0 auto;
   display: grid;
   grid-template-columns: 260px minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
   min-height: calc(100vh - 132px);
+}
+.workspace.sidebar-collapsed {
+  grid-template-columns: minmax(0, 1fr);
+}
+.workspace-toolbar {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 44px minmax(180px, 1fr) auto auto;
+  align-items: center;
+  gap: 9px;
+  padding: 12px 22px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+}
+.workspace-toolbar .sidebar-toggle {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--green);
+}
+.workspace-pack-picker {
+  min-width: 0;
+}
+.workspace-pack-picker select {
+  height: 44px;
+  padding-inline: 11px 34px;
+  font-size: 12px;
+}
+.workspace-toolbar .button {
+  min-height: 44px;
+  padding: 10px 12px;
+}
+.workspace-storage-alert {
+  grid-column: 1 / -1;
+  color: var(--error);
+  font-size: 12px;
+  font-weight: 650;
+  overflow-wrap: anywhere;
 }
 .sidebar {
   padding: 28px 22px;
@@ -197,6 +238,9 @@ p {
   flex-direction: column;
   gap: 25px;
   min-width: 0;
+}
+.sidebar[hidden] {
+  display: none;
 }
 .eyebrow {
   font-family: Consolas, 'Courier New', monospace;
@@ -996,6 +1040,28 @@ dialog::backdrop {
   }
   .workspace {
     display: block;
+    min-height: 0;
+  }
+  .workspace-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 11px 16px;
+  }
+  .workspace-toolbar .sidebar-toggle {
+    flex: 0 0 44px;
+  }
+  .workspace-pack-picker {
+    flex: 1 1 calc(100% - 52px);
+  }
+  .workspace-toolbar .button {
+    flex: 1 1 calc(50% - 4px);
+    min-width: 0;
+    white-space: normal;
+    text-align: center;
+  }
+  .workspace-storage-alert {
+    flex-basis: 100%;
   }
   .sidebar {
     border-inline-end: 0;

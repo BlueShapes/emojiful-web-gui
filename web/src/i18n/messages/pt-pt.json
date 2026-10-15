@@ -131,5 +131,13 @@
   "mod.key.open": "Mostrar ligação para o Web GUI local",
   "mod.chat.available": "Emojiful Web GUI: %s (clique para abrir)",
   "mod.chat.open": "Abrir o Web GUI local",
-  "mod.chat.unavailable": "Não foi possível iniciar o Emojiful Web GUI. Consulte os detalhes no registo do jogo."
+  "mod.chat.unavailable": "Não foi possível iniciar o Emojiful Web GUI. Consulte os detalhes no registo do jogo.",
+  "packs.switch": "Mudar de pacote",
+  "packs.details": "Definições do pacote",
+  "packs.delete": "Eliminar pacote",
+  "packs.deleteConfirm": "Eliminar “{name}”? Isto irá remover o rascunho deste pacote e os emojis guardados neste navegador.",
+  "packs.created": "Foi criado um novo pacote.",
+  "packs.deleted": "O pacote foi eliminado.",
+  "sidebar.hide": "Recolher barra lateral",
+  "sidebar.show": "Expandir barra lateral"
 }

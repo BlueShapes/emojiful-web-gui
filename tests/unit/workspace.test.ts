@@ -24,11 +24,18 @@ describe('saved pack workspace', () => {
 
   it('migrates the previous draft including unfinished metadata without modifying storage', () => {
     const legacy = {
-      ...emptyPack(), id: '', name: '編集中', description: ' unfinished ',
-      emojis: [{ name: 'wave', url: 'https://example.com/wave.png', category: '反応' }],
+      ...emptyPack(),
+      id: '',
+      name: '編集中',
+      description: ' unfinished ',
+      emojis: [
+        { name: 'wave', url: 'https://example.com/wave.png', category: '反応' },
+      ],
     };
     const values = new Map([[LEGACY_STORAGE_KEY, JSON.stringify(legacy)]]);
-    const workspace = loadWorkspace({ getItem: (key) => values.get(key) ?? null });
+    const workspace = loadWorkspace({
+      getItem: (key) => values.get(key) ?? null,
+    });
     expect(getActivePack(workspace)).toEqual(legacy);
     expect(values.size).toBe(1);
     expect(values.has(WORKSPACE_STORAGE_KEY)).toBe(false);
@@ -40,7 +47,9 @@ describe('saved pack workspace', () => {
       [WORKSPACE_STORAGE_KEY, JSON.stringify(workspace)],
       [LEGACY_STORAGE_KEY, JSON.stringify(emptyPack())],
     ]);
-    expect(loadWorkspace({ getItem: (key) => values.get(key) ?? null })).toEqual(workspace);
+    expect(
+      loadWorkspace({ getItem: (key) => values.get(key) ?? null }),
+    ).toEqual(workspace);
   });
 
   it('does not replace a damaged workspace with the old single-pack draft', () => {
@@ -48,7 +57,9 @@ describe('saved pack workspace', () => {
       [WORKSPACE_STORAGE_KEY, '{broken'],
       [LEGACY_STORAGE_KEY, JSON.stringify(emptyPack())],
     ]);
-    expect(() => loadWorkspace({ getItem: (key) => values.get(key) ?? null })).toThrow();
+    expect(() =>
+      loadWorkspace({ getItem: (key) => values.get(key) ?? null }),
+    ).toThrow();
     expect(values.get(WORKSPACE_STORAGE_KEY)).toBe('{broken');
   });
 
@@ -58,11 +69,20 @@ describe('saved pack workspace', () => {
     { ...createWorkspace(), packs: [] },
     { ...createWorkspace(), activeKey: 'missing' },
     { ...createWorkspace(), sidebarCollapsed: 'yes' },
-    { ...createWorkspace(), packs: [createWorkspace().packs[0], createWorkspace().packs[0]] },
-    { ...createWorkspace(), packs: [{ key: 'initial', pack: { ...emptyPack(), emojis: [{}] } }] },
-  ])('rejects invalid saved workspaces without silently dropping data (%#)', (value) => {
-    expect(() => validateWorkspace(value)).toThrow();
-  });
+    {
+      ...createWorkspace(),
+      packs: [createWorkspace().packs[0], createWorkspace().packs[0]],
+    },
+    {
+      ...createWorkspace(),
+      packs: [{ key: 'initial', pack: { ...emptyPack(), emojis: [{}] } }],
+    },
+  ])(
+    'rejects invalid saved workspaces without silently dropping data (%#)',
+    (value) => {
+      expect(() => validateWorkspace(value)).toThrow();
+    },
+  );
 
   it('keeps drafts independent of editable pack IDs, including duplicate IDs', () => {
     const first = createWorkspace();
@@ -71,8 +91,16 @@ describe('saved pack workspace', () => {
     const secondKey = second.activeKey;
     expect(getActivePack(second).id).toBe('my_emojis_2');
     const edited = updatePack(second, secondKey, {
-      ...getActivePack(second), id: 'my_emojis', name: 'Second',
-      emojis: [{ name: 'cat', url: 'https://example.com/cat.png', category: 'Animals' }],
+      ...getActivePack(second),
+      id: 'my_emojis',
+      name: 'Second',
+      emojis: [
+        {
+          name: 'cat',
+          url: 'https://example.com/cat.png',
+          category: 'Animals',
+        },
+      ],
     });
     expect(getActivePack(selectPack(edited, firstKey))).toEqual(emptyPack());
     expect(getActivePack(selectPack(edited, secondKey)).name).toBe('Second');
@@ -81,12 +109,17 @@ describe('saved pack workspace', () => {
   });
 
   it('imports matching pack IDs as separate drafts and keeps the current data', () => {
-    const workspace = updatePack(createWorkspace(), 'initial', { ...emptyPack(), name: 'Original' });
+    const workspace = updatePack(createWorkspace(), 'initial', {
+      ...emptyPack(),
+      name: 'Original',
+    });
     const imported = addPack(workspace, { ...emptyPack(), name: 'Imported' });
     expect(imported.packs).toHaveLength(2);
     expect(new Set(imported.packs.map((item) => item.key)).size).toBe(2);
     expect(getActivePack(imported).name).toBe('Imported');
-    expect(getActivePack(selectPack(imported, workspace.activeKey)).name).toBe('Original');
+    expect(getActivePack(selectPack(imported, workspace.activeKey)).name).toBe(
+      'Original',
+    );
   });
 
   it('selects a remaining pack on deletion and retains at least one draft', () => {
@@ -104,9 +137,14 @@ describe('saved pack workspace', () => {
   it('does not apply a delayed update to a different pack after a switch', () => {
     const first = createWorkspace();
     const second = addPack(first);
-    const updated = updatePack(second, first.activeKey, { ...emptyPack(), name: 'First updated' });
+    const updated = updatePack(second, first.activeKey, {
+      ...emptyPack(),
+      name: 'First updated',
+    });
     expect(updated.activeKey).toBe(second.activeKey);
     expect(getActivePack(updated)).toEqual(getActivePack(second));
-    expect(getActivePack(selectPack(updated, first.activeKey)).name).toBe('First updated');
+    expect(getActivePack(selectPack(updated, first.activeKey)).name).toBe(
+      'First updated',
+    );
   });
 });

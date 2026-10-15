@@ -131,5 +131,13 @@
   "mod.key.open": "显示本地 Web GUI 链接",
   "mod.chat.available": "Emojiful Web GUI：%s（点击打开）",
   "mod.chat.open": "打开本地 Web GUI",
-  "mod.chat.unavailable": "无法启动 Emojiful Web GUI。请查看游戏日志了解详情。"
+  "mod.chat.unavailable": "无法启动 Emojiful Web GUI。请查看游戏日志了解详情。",
+  "packs.switch": "切换表情包",
+  "packs.details": "表情包设置",
+  "packs.delete": "删除表情包",
+  "packs.deleteConfirm": "删除“{name}”吗？这会移除此表情包的草稿以及保存在此浏览器中的表情。",
+  "packs.created": "已创建新表情包。",
+  "packs.deleted": "已删除表情包。",
+  "sidebar.hide": "收起侧边栏",
+  "sidebar.show": "展开侧边栏"
 }

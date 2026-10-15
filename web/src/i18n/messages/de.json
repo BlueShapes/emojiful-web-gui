@@ -131,5 +131,13 @@
   "mod.key.open": "Link zur lokalen Web-GUI anzeigen",
   "mod.chat.available": "Emojiful Web GUI: %s (zum Öffnen anklicken)",
   "mod.chat.open": "Lokale Web-GUI öffnen",
-  "mod.chat.unavailable": "Emojiful Web GUI konnte nicht gestartet werden. Weitere Informationen findest du im Spielprotokoll."
+  "mod.chat.unavailable": "Emojiful Web GUI konnte nicht gestartet werden. Weitere Informationen findest du im Spielprotokoll.",
+  "packs.switch": "Paket wechseln",
+  "packs.details": "Paketeinstellungen",
+  "packs.delete": "Paket löschen",
+  "packs.deleteConfirm": "„{name}“ löschen? Dadurch werden der Entwurf und die in diesem Browser gespeicherten Emojis dieses Pakets entfernt.",
+  "packs.created": "Neues Paket erstellt.",
+  "packs.deleted": "Paket gelöscht.",
+  "sidebar.hide": "Seitenleiste einklappen",
+  "sidebar.show": "Seitenleiste ausklappen"
 }

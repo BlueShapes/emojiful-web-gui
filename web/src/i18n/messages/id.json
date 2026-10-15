@@ -131,5 +131,13 @@
   "mod.key.open": "Tampilkan tautan GUI Web lokal",
   "mod.chat.available": "Emojiful Web GUI: %s (klik untuk membuka)",
   "mod.chat.open": "Buka GUI Web lokal",
-  "mod.chat.unavailable": "Emojiful Web GUI tidak dapat dimulai. Periksa log game untuk detailnya."
+  "mod.chat.unavailable": "Emojiful Web GUI tidak dapat dimulai. Periksa log game untuk detailnya.",
+  "packs.switch": "Ganti paket",
+  "packs.details": "Pengaturan paket",
+  "packs.delete": "Hapus paket",
+  "packs.deleteConfirm": "Hapus “{name}”? Tindakan ini akan menghapus draf paket ini dan emoji yang tersimpan di browser ini.",
+  "packs.created": "Paket baru dibuat.",
+  "packs.deleted": "Paket dihapus.",
+  "sidebar.hide": "Ciutkan bilah samping",
+  "sidebar.show": "Luaskan bilah samping"
 }

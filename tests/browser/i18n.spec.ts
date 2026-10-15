@@ -57,6 +57,22 @@ test('all 22 static routes hydrate in their language under production CSP', asyn
     await expect(selector).toHaveValue(locale.code);
     await expect(selector.locator('option')).toHaveCount(22);
     await expect(
+      page.getByRole('combobox', { name: text['packs.switch'], exact: true }),
+    ).toBeEnabled();
+    const createPack = await page
+      .getByRole('button', { name: text.newPack, exact: true })
+      .boundingBox();
+    const deletePack = await page
+      .getByRole('button', { name: text['packs.delete'], exact: true })
+      .boundingBox();
+    expect(createPack).not.toBeNull();
+    expect(deletePack).not.toBeNull();
+    expect(
+      createPack!.x + createPack!.width <= deletePack!.x + 1 ||
+        deletePack!.x + deletePack!.width <= createPack!.x + 1,
+      `${locale.code}: pack action buttons must not overlap`,
+    ).toBe(true);
+    await expect(
       page.getByText(text['runtime.staticHelp'], { exact: true }),
     ).toBeVisible();
     await page

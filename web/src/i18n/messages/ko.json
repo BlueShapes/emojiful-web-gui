@@ -131,5 +131,13 @@
   "mod.key.open": "로컬 Web GUI 링크 표시",
   "mod.chat.available": "Emojiful Web GUI: %s (클릭하여 열기)",
   "mod.chat.open": "로컬 Web GUI 열기",
-  "mod.chat.unavailable": "Emojiful Web GUI를 시작할 수 없습니다. 자세한 내용은 게임 로그를 확인하세요."
+  "mod.chat.unavailable": "Emojiful Web GUI를 시작할 수 없습니다. 자세한 내용은 게임 로그를 확인하세요.",
+  "packs.switch": "팩 전환",
+  "packs.details": "팩 설정",
+  "packs.delete": "팩 삭제",
+  "packs.deleteConfirm": "“{name}” 팩을 삭제할까요? 이 브라우저에 저장된 이 팩의 초안과 이모지가 삭제됩니다.",
+  "packs.created": "새 팩을 만들었습니다.",
+  "packs.deleted": "팩을 삭제했습니다.",
+  "sidebar.hide": "사이드바 접기",
+  "sidebar.show": "사이드바 펼치기"
 }

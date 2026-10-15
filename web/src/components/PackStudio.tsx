@@ -36,6 +36,17 @@ import {
 } from '../lib/pack';
 import type { BulkFormat, EmojiEntry, EmojiPack } from '../lib/pack';
 import {
+  addPack,
+  createWorkspace,
+  getActivePack,
+  loadWorkspace,
+  removePack,
+  selectPack,
+  updatePack,
+  WORKSPACE_STORAGE_KEY,
+} from '../lib/workspace';
+import type { Workspace } from '../lib/workspace';
+import {
   detectRuntime,
   installPack,
   listInstalled,
@@ -45,7 +56,6 @@ import type { InstalledPack, Runtime } from '../lib/runtime';
 import { locales, localePath, translate, LocalizedError } from '../i18n';
 import type { Locale, MessageKey, MessageArgs } from '../i18n';
 
-const STORAGE_KEY = 'emojiful.pack-studio.v1';
 const blankEntry = (): EmojiEntry => ({
   name: '',
   url: '',
@@ -91,7 +101,7 @@ function EmojiPreview({
 export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
   const t = (key: MessageKey, args?: MessageArgs) =>
     translate(locale, key, args);
-  const [pack, setPack] = useState<EmojiPack>(emptyPack);
+  const [workspace, setWorkspace] = useState<Workspace>(createWorkspace);
   const [runtime, setRuntime] = useState<Runtime>({ mode: 'static' });
   const [ready, setReady] = useState(false);
   const [notice, setNotice] = useState<{
@@ -99,6 +109,7 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
     error: boolean;
   } | null>(null);
   const [storageFailed, setStorageFailed] = useState(false);
+  const [restoreFailed, setRestoreFailed] = useState(false);
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('');
   const [panel, setPanel] = useState<Panel>(null);
@@ -116,10 +127,11 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
     action: () => void;
   } | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
-  const packRef = useRef(pack);
-  packRef.current = pack;
+  const workspaceRef = useRef(workspace);
+  workspaceRef.current = workspace;
   const modalRef = useRef<HTMLDialogElement>(null);
   const confirmRef = useRef<HTMLDialogElement>(null);
+  const pack = getActivePack(workspace);
   const categories = [
     ...new Set(pack.emojis.map((emoji) => emoji.category)),
   ].sort((a, b) =>
@@ -135,9 +147,10 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
 
   useEffect(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) setPack(validateDraft(JSON.parse(saved)));
+      setWorkspace(loadWorkspace(localStorage));
     } catch {
+      setRestoreFailed(true);
+      setStorageFailed(true);
       setNotice({
         message: t('storage.restoreFailed'),
         error: true,
@@ -147,14 +160,14 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
     void detectRuntime().then(setRuntime);
   }, []);
   useEffect(() => {
-    if (!ready) return;
+    if (!ready || restoreFailed) return;
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(pack));
+      localStorage.setItem(WORKSPACE_STORAGE_KEY, JSON.stringify(workspace));
       setStorageFailed(false);
     } catch {
       setStorageFailed(true);
     }
-  }, [pack, ready]);
+  }, [workspace, ready, restoreFailed]);
   useEffect(() => {
     if (panel && !modalRef.current?.open) modalRef.current?.showModal();
     if (!panel) modalRef.current?.close();
@@ -172,14 +185,66 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
     setNotice({ message, error });
   }
   function changeLanguage(next: string) {
-    // Save synchronously before navigation, including the latest unfinished metadata.
+    if (restoreFailed) {
+      notify(t('storage.failed'), true);
+      return;
+    }
+    // Save synchronously before navigation, including every unfinished draft.
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(packRef.current));
+      localStorage.setItem(
+        WORKSPACE_STORAGE_KEY,
+        JSON.stringify(workspaceRef.current),
+      );
+      setStorageFailed(false);
     } catch {
+      setStorageFailed(true);
       notify(t('storage.failed'), true);
       return;
     }
     window.location.assign(localePath(next));
+  }
+  function resetPackView() {
+    setQuery('');
+    setCategory('');
+    setOverwrite(false);
+    setNotice(null);
+    setPanel(null);
+    setEditing(null);
+    setEntry(blankEntry());
+    setBulk('');
+    setBulkCategory('Custom');
+    setBulkFormat('auto');
+    setPanelError('');
+    setConfirmation(null);
+  }
+  function editActivePack(update: (current: EmojiPack) => EmojiPack) {
+    // Capture the draft key from this render, so deferred updates stay attached
+    // to the draft where editing began even if another draft becomes active.
+    const key = workspace.activeKey;
+    const draft = workspace.packs.find((item) => item.key === key);
+    if (!draft) return;
+    // Validate before scheduling React state so a size/schema error can be
+    // handled by the calling form instead of escaping from a state updater.
+    const next = validateDraft(update(draft.pack));
+    setWorkspace((current) => {
+      return updatePack(current, key, next);
+    });
+  }
+  function editMetadata(update: (current: EmojiPack) => EmojiPack) {
+    try {
+      editActivePack(update);
+    } catch (error) {
+      notify(errorMessage(error, locale), true);
+    }
+  }
+  function createPack() {
+    setWorkspace((current) => addPack(current));
+    resetPackView();
+    notify(t('packs.created'));
+  }
+  function switchPack(key: string) {
+    setWorkspace((current) => selectPack(current, key));
+    resetPackView();
   }
   function openSingle(emoji?: EmojiEntry) {
     setEditing(emoji?.name ?? null);
@@ -187,27 +252,13 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
     setPanelError('');
     setPanel('single');
   }
-  function replacePack(next: EmojiPack) {
-    const action = () => {
-      setPack(next);
-      setQuery('');
-      setCategory('');
-      setPanel(null);
-      setOverwrite(false);
-      notify(t('notice.loaded'));
-    };
-    // File and API reads may finish after the user has edited a newer draft.
-    if (JSON.stringify(packRef.current) !== JSON.stringify(emptyPack()))
-      setConfirmation({
-        message: t('confirm.replace'),
-        action,
-      });
-    else action();
-  }
   async function importFile(file?: File) {
     if (!file) return;
     try {
-      replacePack(await readPackFile(file));
+      const imported = await readPackFile(file);
+      setWorkspace((current) => addPack(current, imported));
+      resetPackView();
+      notify(t('notice.loaded'));
     } catch (error) {
       notify(errorMessage(error, locale), true);
     }
@@ -227,7 +278,7 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
         ? pack.emojis.map((emoji) => (emoji.name === editing ? next : emoji))
         : [...pack.emojis, next];
       // A draft can have unfinished metadata; entries are independently valid.
-      setPack(validateDraft({ ...pack, emojis }));
+      editActivePack((current) => validateDraft({ ...current, emojis }));
       setPanel(null);
       notify(editing ? t('notice.updated') : t('notice.added'));
     } catch (error) {
@@ -240,7 +291,9 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
       const entries = importBulk(bulk, bulkCategory, bulkFormat);
       // Validate entries even while metadata is being edited.
       appendEntries({ ...emptyPack(), emojis: pack.emojis }, entries);
-      setPack(validateDraft({ ...pack, emojis: [...pack.emojis, ...entries] }));
+      editActivePack((current) =>
+        validateDraft({ ...current, emojis: [...current.emojis, ...entries] }),
+      );
       setPanel(null);
       setBulk('');
       notify(t('notice.bulkAdded', { count: entries.length }));
@@ -288,7 +341,10 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
   async function openInstalled(id: string) {
     setBusy(true);
     try {
-      replacePack(validatePack(await loadInstalled(runtime, id)));
+      const loaded = validatePack(await loadInstalled(runtime, id));
+      setWorkspace((current) => addPack(current, loaded));
+      resetPackView();
+      notify(t('notice.loaded'));
     } catch (error) {
       setPanelError(errorMessage(error, locale));
     } finally {
@@ -351,29 +407,90 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
           </a>
         </div>
       </header>
-      <main className="workspace">
-        <aside className="sidebar">
-          <div className="sidebar-heading">
-            <span className="eyebrow">{t('workspace')}</span>
-            <button
-              className="icon-button"
-              title={t('newPack')}
-              aria-label={t('newPack')}
-              onClick={() =>
-                setConfirmation({
-                  message: t('confirm.newPack'),
-                  action: () => {
-                    setPack(emptyPack());
-                    setQuery('');
-                    setCategory('');
-                    setOverwrite(false);
-                    notify(t('notice.newPack'));
-                  },
-                })
-              }
+      <main
+        className={`workspace ${workspace.sidebarCollapsed ? 'sidebar-collapsed' : ''}`}
+      >
+        <div className="workspace-toolbar">
+          <button
+            className="icon-button sidebar-toggle"
+            aria-controls="pack-sidebar"
+            aria-expanded={!workspace.sidebarCollapsed}
+            title={t(
+              workspace.sidebarCollapsed ? 'sidebar.show' : 'sidebar.hide',
+            )}
+            aria-label={t(
+              workspace.sidebarCollapsed ? 'sidebar.show' : 'sidebar.hide',
+            )}
+            onClick={() =>
+              setWorkspace((current) => ({
+                ...current,
+                sidebarCollapsed: !current.sidebarCollapsed,
+              }))
+            }
+          >
+            {workspace.sidebarCollapsed ? (
+              <ChevronRight size={19} />
+            ) : (
+              <ArrowLeft size={19} />
+            )}
+          </button>
+          <label className="workspace-pack-picker">
+            <span className="visually-hidden">{t('packs.switch')}</span>
+            <select
+              aria-label={t('packs.switch')}
+              value={workspace.activeKey}
+              disabled={!ready}
+              onChange={(event) => switchPack(event.target.value)}
             >
-              <Plus size={18} />
-            </button>
+              {workspace.packs.map((item, index) => (
+                <option key={item.key} value={item.key}>
+                  {`${item.pack.name || t('unnamed')} · ${item.pack.id || t('field.packId')} · ${index + 1}`}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button
+            className="button secondary workspace-create"
+            disabled={!ready}
+            onClick={createPack}
+          >
+            <Plus size={17} />
+            {t('newPack')}
+          </button>
+          <button
+            className="button secondary workspace-delete"
+            disabled={!ready || workspace.packs.length <= 1}
+            onClick={() => {
+              const key = workspace.activeKey;
+              setConfirmation({
+                message: t('packs.deleteConfirm', {
+                  name: pack.name || t('unnamed'),
+                }),
+                action: () => {
+                  setWorkspace((current) => removePack(current, key));
+                  resetPackView();
+                  notify(t('packs.deleted'));
+                },
+              });
+            }}
+          >
+            <Trash2 size={16} />
+            {t('packs.delete')}
+          </button>
+          {storageFailed && (
+            <span className="workspace-storage-alert" role="alert">
+              {t('storage.failed')}
+            </span>
+          )}
+        </div>
+        <aside
+          id="pack-sidebar"
+          className="sidebar"
+          aria-label={t('packs.details')}
+          hidden={workspace.sidebarCollapsed}
+        >
+          <div className="sidebar-heading">
+            <span className="eyebrow">{t('packs.details')}</span>
           </div>
           <div className="pack-identity">
             <span className="pack-icon">
@@ -397,7 +514,10 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
                 dir="auto"
                 maxLength={100}
                 onChange={(event) =>
-                  setPack({ ...pack, name: event.target.value })
+                  editMetadata((current) => ({
+                    ...current,
+                    name: event.target.value,
+                  }))
                 }
               />
             </label>
@@ -410,7 +530,10 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
                 maxLength={64}
                 spellCheck={false}
                 onChange={(event) =>
-                  setPack({ ...pack, id: event.target.value })
+                  editMetadata((current) => ({
+                    ...current,
+                    id: event.target.value,
+                  }))
                 }
               />
               <small>{t('packIdHelp')}</small>
@@ -424,7 +547,10 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
                 maxLength={1000}
                 placeholder={t('descriptionPlaceholder')}
                 onChange={(event) =>
-                  setPack({ ...pack, description: event.target.value })
+                  editMetadata((current) => ({
+                    ...current,
+                    description: event.target.value,
+                  }))
                 }
               />
             </label>
@@ -588,22 +714,30 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
                         <button
                           className="icon-button danger"
                           aria-label={t('deleteNamed', { name: emoji.name })}
-                          onClick={() =>
+                          onClick={() => {
+                            const key = workspace.activeKey;
                             setConfirmation({
                               message: t('confirm.delete', {
                                 name: emoji.name,
                               }),
                               action: () => {
-                                setPack({
-                                  ...pack,
-                                  emojis: pack.emojis.filter(
-                                    (item) => item.name !== emoji.name,
-                                  ),
+                                setWorkspace((current) => {
+                                  const draft = current.packs.find(
+                                    (item) => item.key === key,
+                                  );
+                                  return draft
+                                    ? updatePack(current, key, {
+                                        ...draft.pack,
+                                        emojis: draft.pack.emojis.filter(
+                                          (item) => item.name !== emoji.name,
+                                        ),
+                                      })
+                                    : current;
                                 });
                                 notify(t('notice.deleted'));
                               },
-                            })
-                          }
+                            });
+                          }}
                         >
                           <Trash2 size={15} />
                         </button>

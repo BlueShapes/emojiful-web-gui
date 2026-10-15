@@ -79,7 +79,7 @@ test('static editor creates, persists, filters and exports a pack', async ({
   await page.screenshot({ path: '.work/studio-desktop.png', fullPage: true });
 });
 
-test('a slow installed-pack read cannot silently replace a newer draft', async ({
+test('a slow installed-pack read adds a separate pack and retains a newer draft', async ({
   page,
 }) => {
   await page.route('**/__emojiful__/session.json', (route) =>
@@ -136,6 +136,11 @@ test('a slow installed-pack read cannot silently replace a newer draft', async (
   });
   await page.goto('/ja/');
   await expect(page.getByText(ja['edition.local'])).toBeVisible();
+  const packSelector = page.getByRole('combobox', {
+    name: ja['packs.switch'],
+    exact: true,
+  });
+  const originalKey = await packSelector.inputValue();
   await page.getByRole('button', { name: ja['installed.open'] }).click();
   await page
     .getByRole('button', { name: 'Other Pack other.zip · 絵文字 1 個' })
@@ -150,8 +155,9 @@ test('a slow installed-pack read cannot silently replace a newer draft', async (
     .fill('new,https://example.com/new.png,Custom');
   await page.getByRole('button', { name: ja['bulk.add'] }).click();
   release();
-  await expect(page.getByText(ja['confirm.replace'])).toBeVisible();
-  await page.getByRole('button', { name: ja['cancel'], exact: true }).click();
+  await expect(packSelector.locator('option')).toHaveCount(2);
+  await expect(page.getByText(':old:', { exact: true })).toBeVisible();
+  await packSelector.selectOption(originalKey);
   await expect(page.getByText(':new:', { exact: true })).toBeVisible();
   await expect(page.getByText(':old:', { exact: true })).toHaveCount(0);
 });
