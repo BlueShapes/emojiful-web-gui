@@ -14,6 +14,24 @@ const cat = {
 };
 
 describe('table bulk input', () => {
+  it('flags names at the configurable length threshold without blocking valid imports', () => {
+    const rows = [
+      { ...cat, name: 'a'.repeat(11) },
+      { ...cat, name: 'b'.repeat(12) },
+    ];
+    const issues = getBulkTableIssues(rows, 'Custom');
+    expect(issues[0]).toEqual([]);
+    expect(issues[1]).toContainEqual({
+      field: 'name',
+      severity: 'warning',
+      error: expect.objectContaining({
+        key: 'name.longWarning',
+        args: { length: 12, threshold: 12 },
+      }),
+    });
+    expect(importBulkTable(rows, 'Custom')).toHaveLength(2);
+    expect(getBulkTableIssues(rows, 'Custom', [], 13)).toEqual([[], []]);
+  });
   it('reports every row participating in normalized duplicates, even with invalid URLs', () => {
     const rows = [
       { ...cat, name: ':Medetai-Nya:' },
