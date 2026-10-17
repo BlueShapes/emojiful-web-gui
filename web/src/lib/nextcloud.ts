@@ -5,7 +5,6 @@ import {
   MAX_EMOJIS,
   MAX_IMPORT_BYTES,
   MAX_PACK_BYTES,
-  nameFromUrl,
   validateEmoji,
 } from './pack';
 import type { EmojiEntry } from './pack';
@@ -16,6 +15,11 @@ export interface NextcloudFolder {
   readonly davUrl: string;
   /** Decoded path components used to enforce the WebDAV listing scope. */
   readonly davPathSegments: readonly string[];
+}
+
+export interface NextcloudImageEntry extends EmojiEntry {
+  /** Original decoded filename, retained for the preview UI. */
+  sourceFilename: string;
 }
 
 const DAV_NAMESPACE = 'DAV:';
@@ -231,9 +235,9 @@ export function buildNextcloudCommand(
 export function nextcloudImageEntry(
   folder: NextcloudFolder,
   filename: string,
-  index: number,
+  _index: number,
   category: string,
-): EmojiEntry | null {
+): NextcloudImageEntry | null {
   const { url, segments } = canonicalFolder(folder);
   if (
     typeof filename !== 'string' ||
@@ -244,16 +248,22 @@ export function nextcloudImageEntry(
   ) {
     return fail('nextcloud.invalidPath');
   }
-  const extension = filename.split('.').pop()?.toLowerCase() ?? '';
+  const extensionIndex = filename.lastIndexOf('.');
+  if (extensionIndex === -1) return null;
+  const extension = filename.slice(extensionIndex + 1).toLowerCase();
   if (!IMAGE_EXTENSIONS.has(extension)) return null;
+  const name = filename.slice(0, extensionIndex);
   const imageUrl = `${url.origin}/${[...segments, filename]
     .map(encodeSegment)
     .join('/')}`;
-  return validateEmoji({
-    name: nameFromUrl(imageUrl, index),
+  const validated = validateEmoji({
+    // This is a preview record. Preserve invalid names so the table can show
+    // and let the user fix them; registration validation remains strict.
+    name: 'nextcloud_preview',
     url: imageUrl,
     category,
   });
+  return { ...validated, name, sourceFilename: filename };
 }
 
 function directChildren(parent: Element, localName: string): Element[] {
@@ -261,32 +271,6 @@ function directChildren(parent: Element, localName: string): Element[] {
     (child) =>
       child.namespaceURI === DAV_NAMESPACE && child.localName === localName,
   );
-}
-
-export function disambiguateNextcloudNames(
-  entries: readonly EmojiEntry[],
-): EmojiEntry[] {
-  const counts = new Map<string, number>();
-  for (const entry of entries)
-    counts.set(entry.name, (counts.get(entry.name) ?? 0) + 1);
-  // Reserve every original name so a generated suffix cannot take another file's name.
-  const used = new Set(counts.keys());
-  return entries.map((entry) => {
-    if (counts.get(entry.name) === 1) return { ...entry };
-    const extension = new URL(entry.url).pathname
-      .split('.')
-      .pop()!
-      .toLowerCase();
-    let sequence = 1;
-    let name: string;
-    do {
-      const suffix = `_${extension}${sequence === 1 ? '' : `_${sequence}`}`;
-      name = entry.name.slice(0, 64 - suffix.length) + suffix;
-      sequence += 1;
-    } while (used.has(name));
-    used.add(name);
-    return { ...entry, name };
-  });
 }
 
 function responseStatusCode(response: Element): number | null {
@@ -390,7 +374,7 @@ export function importNextcloudListing(
   xml: string,
   folder: NextcloudFolder,
   category: string,
-): EmojiEntry[] {
+): NextcloudImageEntry[] {
   if (
     typeof xml !== 'string' ||
     new TextEncoder().encode(xml).byteLength > MAX_IMPORT_BYTES
@@ -420,7 +404,7 @@ export function importNextcloudListing(
 
   const responses = directChildren(root, 'response');
   if (!responses.length) return fail('nextcloud.invalidXml');
-  const entries: EmojiEntry[] = [];
+  const entries: NextcloudImageEntry[] = [];
   for (const response of responses) {
     const hrefs = directChildren(response, 'href');
     if (hrefs.length !== 1) return fail('nextcloud.invalidXml');
@@ -475,13 +459,15 @@ export function importNextcloudListing(
   }
 
   if (!entries.length) return fail('nextcloud.noImages');
-  const namedEntries = disambiguateNextcloudNames(entries);
-  const normalizedPack = { ...emptyPack(), emojis: namedEntries };
+  const normalizedPack = {
+    ...emptyPack(),
+    emojis: entries.map(({ name, url, category }) => ({ name, url, category })),
+  };
   if (
     new TextEncoder().encode(JSON.stringify(normalizedPack)).byteLength >
     MAX_PACK_BYTES
   ) {
     throw new LocalizedError('error.packSize');
   }
-  return namedEntries;
+  return entries;
 }

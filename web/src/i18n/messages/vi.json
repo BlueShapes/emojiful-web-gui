@@ -80,6 +80,7 @@
   "bulk.defaultCategory": "Danh mục mặc định",
   "bulk.data": "Dữ liệu đầu vào",
   "bulk.file": "Chọn tệp CSV, TSV hoặc JSON",
+  "bulk.sourceFilename": "Tên tệp gốc",
   "bulk.hints": "Mẹo nhập dữ liệu",
   "bulk.csvHelp": "CSV/TSV chấp nhận các tiêu đề name, url, category. Nếu không có tiêu đề, hãy dùng tên, URL, danh mục hoặc URL, tên, danh mục. Danh mục là tùy chọn.",
   "bulk.urlHelp": "Danh sách URL dùng tên tệp hình ảnh làm tên emoji. Hãy sửa các tên trùng trước khi nhập. Nếu có bất kỳ lỗi nào, toàn bộ quá trình nhập sẽ bị hủy.",

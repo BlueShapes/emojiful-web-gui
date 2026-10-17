@@ -80,6 +80,7 @@
   "bulk.defaultCategory": "預設分類",
   "bulk.data": "輸入資料",
   "bulk.file": "選擇 CSV、TSV 或 JSON 檔案",
+  "bulk.sourceFilename": "原始檔案名稱",
   "bulk.hints": "輸入提示",
   "bulk.csvHelp": "CSV/TSV 可使用 name、url、category 標題列。沒有標題列時，請按 name、URL、category 或 URL、name、category 的次序輸入。分類可留空。",
   "bulk.urlHelp": "網址清單會以圖片檔名作為表情符號名稱。請先修正重複名稱再匯入。如有任何錯誤，整批匯入都會取消。",

@@ -80,6 +80,7 @@
   "bulk.defaultCategory": "डिफ़ॉल्ट श्रेणी",
   "bulk.data": "इनपुट डेटा",
   "bulk.file": "CSV, TSV या JSON फ़ाइल चुनें",
+  "bulk.sourceFilename": "मूल फ़ाइल नाम",
   "bulk.hints": "इनपुट सुझाव",
   "bulk.csvHelp": "CSV/TSV में name, url, category हेडर इस्तेमाल करें। हेडर न हों तो name, URL, category या URL, name, category क्रम रखें। श्रेणी वैकल्पिक है।",
   "bulk.urlHelp": "URL सूची में इमेज फ़ाइलनाम से इमोजी नाम बनता है। डुप्लिकेट नाम ठीक करके आयात करें। किसी भी त्रुटि पर पूरा आयात रद्द हो जाएगा।",

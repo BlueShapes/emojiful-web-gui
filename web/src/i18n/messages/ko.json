@@ -80,6 +80,7 @@
   "bulk.defaultCategory": "기본 카테고리",
   "bulk.data": "입력 데이터",
   "bulk.file": "CSV, TSV 또는 JSON 파일 선택",
+  "bulk.sourceFilename": "원본 파일 이름",
   "bulk.hints": "입력 안내",
   "bulk.csvHelp": "CSV/TSV 헤더로 name, url, category를 사용할 수 있습니다. 헤더가 없으면 이름, URL, 카테고리 또는 URL, 이름, 카테고리 순서로 입력하세요. 카테고리는 선택 사항입니다.",
   "bulk.urlHelp": "URL 목록에서는 이미지 파일 이름을 이모지 이름으로 사용합니다. 가져오기 전에 중복 이름을 수정하세요. 오류가 하나라도 있으면 전체 가져오기가 취소됩니다.",

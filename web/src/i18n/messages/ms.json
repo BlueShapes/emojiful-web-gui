@@ -80,6 +80,7 @@
   "bulk.defaultCategory": "Kategori lalai",
   "bulk.data": "Data input",
   "bulk.file": "Pilih fail CSV, TSV atau JSON",
+  "bulk.sourceFilename": "Nama fail asal",
   "bulk.hints": "Petua input",
   "bulk.csvHelp": "CSV/TSV menerima pengepala name, url, category. Tanpa pengepala, gunakan susunan name, URL, category atau URL, name, category. Kategori adalah pilihan.",
   "bulk.urlHelp": "Senarai URL menggunakan nama fail imej sebagai nama emoji. Betulkan nama pendua sebelum mengimport. Sebarang ralat akan membatalkan seluruh import.",

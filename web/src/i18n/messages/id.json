@@ -80,6 +80,7 @@
   "bulk.defaultCategory": "Kategori default",
   "bulk.data": "Data input",
   "bulk.file": "Pilih file CSV, TSV, atau JSON",
+  "bulk.sourceFilename": "Nama file asli",
   "bulk.hints": "Tips input",
   "bulk.csvHelp": "CSV/TSV menerima header name, url, category. Tanpa header, gunakan nama, URL, kategori atau URL, nama, kategori. Kategori bersifat opsional.",
   "bulk.urlHelp": "Daftar URL menggunakan nama file gambar sebagai nama emoji. Perbaiki nama duplikat sebelum mengimpor. Kesalahan apa pun akan membatalkan seluruh impor.",

@@ -80,6 +80,7 @@
   "bulk.defaultCategory": "既定のカテゴリー",
   "bulk.data": "入力データ",
   "bulk.file": "CSV、TSV、JSONファイルを選ぶ",
+  "bulk.sourceFilename": "元のファイル名",
   "bulk.hints": "入力のヒント",
   "bulk.csvHelp": "CSV/TSVは name、url、category の見出しに対応しています。見出しがない場合は name, URL, category または URL, name, category の順で入力してください。カテゴリーは省略できます。",
   "bulk.urlHelp": "URLリストでは画像のファイル名から絵文字名を生成します。名前が重複した場合は修正してから取り込んでください。エラーがあると全件の取り込みを中止します。",

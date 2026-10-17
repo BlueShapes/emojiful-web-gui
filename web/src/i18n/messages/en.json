@@ -80,6 +80,7 @@
   "bulk.defaultCategory": "Default category",
   "bulk.data": "Input data",
   "bulk.file": "Choose a CSV, TSV or JSON file",
+  "bulk.sourceFilename": "Original filename",
   "bulk.hints": "Input tips",
   "bulk.csvHelp": "CSV/TSV accepts name, url, category headers. Without headers, use name, URL, category or URL, name, category. Category is optional.",
   "bulk.urlHelp": "URL lists use image filenames as emoji names. Fix duplicate names before importing. Any error cancels the entire import.",

@@ -80,6 +80,7 @@
   "bulk.defaultCategory": "Výchozí kategorie",
   "bulk.data": "Vstupní data",
   "bulk.file": "Vybrat soubor CSV, TSV nebo JSON",
+  "bulk.sourceFilename": "Původní název souboru",
   "bulk.hints": "Tipy pro import",
   "bulk.csvHelp": "CSV/TSV podporuje záhlaví name, url, category. Bez záhlaví použijte pořadí name, URL, category nebo URL, name, category. Kategorie je nepovinná.",
   "bulk.urlHelp": "V seznamech URL se jako názvy emoji použijí názvy souborů obrázků. Před importem opravte duplicitní názvy. Jakákoli chyba zruší celý import.",

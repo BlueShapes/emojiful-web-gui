@@ -80,6 +80,7 @@
   "bulk.defaultCategory": "Categoria padrão",
   "bulk.data": "Dados de entrada",
   "bulk.file": "Escolher um arquivo CSV, TSV ou JSON",
+  "bulk.sourceFilename": "Nome original do arquivo",
   "bulk.hints": "Dicas de entrada",
   "bulk.csvHelp": "CSV/TSV aceita os cabeçalhos name, url, category. Sem cabeçalhos, use name, URL, category ou URL, name, category. A categoria é opcional.",
   "bulk.urlHelp": "Nas listas de URLs, os nomes dos arquivos de imagem viram nomes de emoji. Corrija nomes duplicados antes de importar. Qualquer erro cancela toda a importação.",

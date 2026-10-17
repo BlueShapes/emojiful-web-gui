@@ -80,6 +80,7 @@
   "bulk.defaultCategory": "Varsayılan kategori",
   "bulk.data": "Giriş verisi",
   "bulk.file": "Bir CSV, TSV veya JSON dosyası seçin",
+  "bulk.sourceFilename": "Özgün dosya adı",
   "bulk.hints": "Giriş ipuçları",
   "bulk.csvHelp": "CSV/TSV, name, url, category başlıklarını kabul eder. Başlık yoksa ad, URL, kategori veya URL, ad, kategori sırasını kullanın. Kategori isteğe bağlıdır.",
   "bulk.urlHelp": "URL listelerinde emoji adı olarak görsel dosya adları kullanılır. İçe aktarmadan önce yinelenen adları düzeltin. Herhangi bir hata tüm içe aktarma işlemini iptal eder.",

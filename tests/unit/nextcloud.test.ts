@@ -6,7 +6,10 @@ import {
   parseNextcloudFolder,
   importNextcloudListing,
 } from '../../web/src/lib/nextcloud';
-import { getBulkTableIssues, importBulkTable } from '../../web/src/lib/bulk-table';
+import {
+  getBulkTableIssues,
+  importBulkTable,
+} from '../../web/src/lib/bulk-table';
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -16,7 +19,12 @@ function stubListingDomParser() {
     textContent = '',
     children: Element[] = [],
   ) =>
-    ({ namespaceURI: 'DAV:', localName, textContent, children }) as unknown as Element;
+    ({
+      namespaceURI: 'DAV:',
+      localName,
+      textContent,
+      children,
+    }) as unknown as Element;
   vi.stubGlobal(
     'DOMParser',
     class {
@@ -151,7 +159,7 @@ describe('Nextcloud public folder terminal import', () => {
     expect(
       nextcloudImageEntry(folder, 'a#b&c%.webp', 3, 'Custom')?.url,
     ).toContain('a%23b%26c%25.webp');
-    for (const filename of ['notes.txt', 'vector.svg', 'folder'])
+    for (const filename of ['notes.txt', 'vector.svg', 'folder', 'png', 'GIF'])
       expect(nextcloudImageEntry(folder, filename, 4, 'Custom')).toBeNull();
     expect(() =>
       nextcloudImageEntry(folder, '../cat.png', 5, 'Custom'),
@@ -186,9 +194,7 @@ describe('Nextcloud filename preservation', () => {
     ]);
 
     const issues = getBulkTableIssues(entries, 'Custom');
-    expect(
-      issues.map((row) => row.map(({ error }) => error.key)),
-    ).toEqual([
+    expect(issues.map((row) => row.map(({ error }) => error.key))).toEqual([
       ['error.duplicate'],
       ['error.duplicate'],
     ]);
@@ -206,11 +212,19 @@ describe('Nextcloud filename preservation', () => {
   it('retains Unicode, spaces, case, and names longer than 64 characters in previews', () => {
     stubListingDomParser();
     const entries = importNextcloudListing(
-      listing(['ショパン-nya.png', 'バッハ-nya.png', '猫.gif', 'Happy Cat.PNG', `${'x'.repeat(70)}.webp`]),
+      listing([
+        'ショパン-nya.png',
+        'バッハ-nya.png',
+        '猫.gif',
+        'Happy Cat.PNG',
+        `${'x'.repeat(70)}.webp`,
+      ]),
       folder,
       'Custom',
     );
-    expect(entries.map(({ name, sourceFilename }) => [name, sourceFilename])).toEqual([
+    expect(
+      entries.map(({ name, sourceFilename }) => [name, sourceFilename]),
+    ).toEqual([
       ['ショパン-nya', 'ショパン-nya.png'],
       ['バッハ-nya', 'バッハ-nya.png'],
       ['猫', '猫.gif'],
@@ -218,7 +232,10 @@ describe('Nextcloud filename preservation', () => {
       ['x'.repeat(70), `${'x'.repeat(70)}.webp`],
     ]);
 
-    const invalidIssues = getBulkTableIssues([entries[0], entries[2]], 'Custom');
+    const invalidIssues = getBulkTableIssues(
+      [entries[0], entries[2]],
+      'Custom',
+    );
     expect(invalidIssues.map((row) => row[0]?.error.key)).toEqual([
       'error.emojiName',
       'error.emojiName',

@@ -1126,6 +1126,20 @@ dialog::backdrop {
   border-color: var(--error);
   background: #fff5f5;
 }
+.bulk-source-filename {
+  margin-top: 6px;
+  font-size: 11px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.bulk-source-filename span {
+  display: block;
+  color: var(--muted);
+}
+.bulk-source-filename bdi {
+  display: block;
+  white-space: pre-wrap;
+}
 .name-conflict-count,
 .emoji-name-error {
   color: var(--error);

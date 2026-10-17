@@ -11,6 +11,8 @@ import NameReplacement from './NameReplacement';
 
 export interface BulkTableRow extends EmojiEntry {
   id: string;
+  /** Original import filename; kept while names are edited or replaced. */
+  sourceFilename?: string;
 }
 
 export function createBulkTableRows(): BulkTableRow[] {
@@ -67,6 +69,9 @@ export default function BulkTable({
     return (
       [
         field === 'url' && urlPrefix ? 'bulk-url-help' : '',
+        field === 'name' && rows[index].sourceFilename
+          ? `bulk-source-${rows[index].id}`
+          : '',
         hasIssue(index, field) ? `bulk-issue-${rows[index].id}-${field}` : '',
       ]
         .filter(Boolean)
@@ -227,6 +232,15 @@ export default function BulkTable({
                       edit(row.id, 'name', event.target.value)
                     }
                   />
+                  {row.sourceFilename && (
+                    <div
+                      className="bulk-source-filename"
+                      id={`bulk-source-${row.id}`}
+                    >
+                      <span>{t('bulk.sourceFilename')}</span>
+                      <bdi>{row.sourceFilename}</bdi>
+                    </div>
+                  )}
                   {renderIssues(index, 'name')}
                 </td>
                 <td className="bulk-url-cell">

@@ -80,6 +80,7 @@
   "bulk.defaultCategory": "Categoria implicită",
   "bulk.data": "Date de intrare",
   "bulk.file": "Alege un fișier CSV, TSV sau JSON",
+  "bulk.sourceFilename": "Numele original al fișierului",
   "bulk.hints": "Sfaturi pentru introducerea datelor",
   "bulk.csvHelp": "CSV/TSV acceptă antetele name, url, category. Fără antete, folosește ordinea name, URL, category sau URL, name, category. Categoria este opțională.",
   "bulk.urlHelp": "În listele de URL-uri, numele fișierelor imaginilor devin numele emoji-urilor. Corectează numele duplicate înainte de import. Orice eroare anulează întregul import.",
