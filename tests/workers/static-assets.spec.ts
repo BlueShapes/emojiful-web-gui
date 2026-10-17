@@ -155,14 +155,22 @@ test('Workers GUI hydrates, saves drafts, switches language and exports ZIP unde
     .getByLabel(ja['bulk.data'])
     .fill('wave,https://example.com/wave.gif,Reactions');
   await page.getByRole('button', { name: ja['bulk.add'], exact: true }).click();
-  await expect(page.getByText(':wave:', { exact: true })).toBeVisible();
+  await expect(page.getByRole('alert')).toContainText(
+    ja['error.builtinEmoji'].replace('{name}', 'wave'),
+  );
+  await expect(page.locator('.emoji-card')).toHaveCount(0);
+  await page
+    .getByLabel(ja['bulk.data'])
+    .fill('my_wave,https://example.com/wave.gif,Reactions');
+  await page.getByRole('button', { name: ja['bulk.add'], exact: true }).click();
+  await expect(page.getByText(':my_wave:', { exact: true })).toBeVisible();
   await page.reload();
-  await expect(page.getByText(':wave:', { exact: true })).toBeVisible();
+  await expect(page.getByText(':my_wave:', { exact: true })).toBeVisible();
   await page
     .getByRole('combobox', { name: ja.language, exact: true })
     .selectOption('en');
   await expect(page).toHaveURL(/\/en\/$/);
-  await expect(page.getByText(':wave:', { exact: true })).toBeVisible();
+  await expect(page.getByText(':my_wave:', { exact: true })).toBeVisible();
   const download = page.waitForEvent('download');
   await page
     .getByRole('button', { name: en['export.zip'], exact: true })
