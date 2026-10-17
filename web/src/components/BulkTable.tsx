@@ -5,6 +5,9 @@ import type { Locale, MessageArgs, MessageKey } from '../i18n';
 import { MAX_EMOJIS } from '../lib/pack';
 import type { EmojiEntry } from '../lib/pack';
 import { getBulkTableIssues } from '../lib/bulk-table';
+import { DEFAULT_NAME_WARNING_LENGTH } from '../lib/name-tools';
+import NameWarningSettings from './NameWarningSettings';
+import NameReplacement from './NameReplacement';
 
 export interface BulkTableRow extends EmojiEntry {
   id: string;
@@ -25,6 +28,8 @@ export default function BulkTable({
   defaultCategory,
   urlPrefix = '',
   existingNames = [],
+  warningThreshold = DEFAULT_NAME_WARNING_LENGTH,
+  onWarningThresholdChange,
   onChange,
 }: {
   locale: Locale;
@@ -32,6 +37,8 @@ export default function BulkTable({
   defaultCategory: string;
   urlPrefix?: string;
   existingNames?: readonly string[];
+  warningThreshold?: number;
+  onWarningThresholdChange?: (threshold: number) => void;
   onChange: (rows: BulkTableRow[]) => void;
 }) {
   const t = (key: MessageKey, args?: MessageArgs) =>
@@ -40,7 +47,17 @@ export default function BulkTable({
   const pendingFocus = useRef<string | null>(null);
   const table = useRef<HTMLTableElement>(null);
   const lastIssueRow = useRef<string | null>(null);
-  const issues = getBulkTableIssues(rows, defaultCategory, existingNames);
+  const issues = getBulkTableIssues(
+    rows,
+    defaultCategory,
+    existingNames,
+    warningThreshold,
+  );
+  const hasError = (index: number, field?: keyof EmojiEntry) =>
+    issues[index].some(
+      (issue) =>
+        issue.severity !== 'warning' && (!field || issue.field === field),
+    );
   const issueRows = issues.flatMap((rowIssues, index) =>
     rowIssues.length ? [index] : [],
   );
@@ -61,7 +78,7 @@ export default function BulkTable({
     if (!fieldIssues.length) return null;
     return (
       <div
-        className="bulk-cell-issue"
+        className={`bulk-cell-issue${fieldIssues.every((issue) => issue.severity === 'warning') ? ' bulk-cell-warning' : ''}`}
         id={`bulk-issue-${rows[index].id}-${field}`}
       >
         {fieldIssues.map((issue, issueIndex) => (
@@ -95,6 +112,13 @@ export default function BulkTable({
       <p className="form-intro" id="bulk-table-help">
         {t('bulk.tableHelp')}
       </p>
+      {onWarningThresholdChange && (
+        <NameWarningSettings
+          locale={locale}
+          threshold={warningThreshold}
+          onChange={onWarningThresholdChange}
+        />
+      )}
       {urlPrefix && (
         <div className="bulk-common-url">
           <span>{t('bulk.commonUrl')}</span>
@@ -104,8 +128,21 @@ export default function BulkTable({
           </p>
         </div>
       )}
+      <NameReplacement
+        locale={locale}
+        names={rows.map((row) => row.name)}
+        threshold={warningThreshold}
+        existingNames={existingNames}
+        scope={t('replace.scopeTable', { count: rows.length })}
+        onApply={(names) =>
+          onChange(rows.map((row, index) => ({ ...row, name: names[index] })))
+        }
+      />
       {issueRows.length > 0 && (
-        <div className="bulk-issue-summary" role="status">
+        <div
+          className={`bulk-issue-summary${issueRows.every((index) => !hasError(index)) ? ' bulk-warning-summary' : ''}`}
+          role="status"
+        >
           <strong>{t('bulk.issueSummary', { count: issueRows.length })}</strong>
           <button
             className="button secondary"
@@ -118,7 +155,9 @@ export default function BulkTable({
               lastIssueRow.current = rows[index].id;
               const input = table.current?.tBodies[0].rows[
                 index
-              ]?.querySelector<HTMLInputElement>('input[aria-invalid="true"]');
+              ]?.querySelector<HTMLInputElement>(
+                'input[data-attention="true"]',
+              );
               input?.focus();
               input?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
             }}
@@ -154,7 +193,13 @@ export default function BulkTable({
             {rows.map((row, index) => (
               <tr
                 key={row.id}
-                className={issues[index].length ? 'bulk-row-issue' : undefined}
+                className={
+                  hasError(index)
+                    ? 'bulk-row-issue'
+                    : issues[index].length
+                      ? 'bulk-row-warning'
+                      : undefined
+                }
               >
                 <th scope="row" className="bulk-row-number">
                   {index + 1}
@@ -173,7 +218,8 @@ export default function BulkTable({
                     autoCapitalize="none"
                     spellCheck={false}
                     maxLength={64}
-                    aria-invalid={hasIssue(index, 'name') || undefined}
+                    aria-invalid={hasError(index, 'name') || undefined}
+                    data-attention={hasIssue(index, 'name') || undefined}
                     aria-describedby={describedBy(index, 'name')}
                     value={row.name}
                     placeholder="happy_cat"
@@ -200,7 +246,8 @@ export default function BulkTable({
                       autoCapitalize="none"
                       spellCheck={false}
                       maxLength={2048}
-                      aria-invalid={hasIssue(index, 'url') || undefined}
+                      aria-invalid={hasError(index, 'url') || undefined}
+                      data-attention={hasIssue(index, 'url') || undefined}
                       aria-describedby={describedBy(index, 'url')}
                       title={row.url}
                       value={row.url}
@@ -229,7 +276,8 @@ export default function BulkTable({
                     })}
                     dir="auto"
                     maxLength={80}
-                    aria-invalid={hasIssue(index, 'category') || undefined}
+                    aria-invalid={hasError(index, 'category') || undefined}
+                    data-attention={hasIssue(index, 'category') || undefined}
                     aria-describedby={describedBy(index, 'category')}
                     value={row.category}
                     placeholder={defaultCategory}

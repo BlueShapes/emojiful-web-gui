@@ -89,7 +89,9 @@ describe('table bulk input', () => {
 
     expect(
       issues.map((rowIssues) =>
-        rowIssues.map(({ field, error }) => [field, error.key]),
+        rowIssues
+          .filter((issue) => issue.severity !== 'warning')
+          .map(({ field, error }) => [field, error.key]),
       ),
     ).toEqual([
       [['name', 'error.emojiName']],
@@ -97,7 +99,9 @@ describe('table bulk input', () => {
       [['category', 'error.fieldLength']],
       [],
     ]);
-    const categoryError = issues[2][0].error;
+    const categoryError = issues[2].find(
+      (issue) => issue.field === 'category',
+    )!.error;
     expect(categoryError.args.field).toBeInstanceOf(LocalizedError);
     expect((categoryError.args.field as LocalizedError).key).toBe(
       'field.category',
@@ -108,7 +112,11 @@ describe('table bulk input', () => {
     const rows = [blank(), { ...cat, name: 'invalid name' }];
     const original = structuredClone(rows);
 
-    expect(getBulkTableIssues(rows, 'Custom')).toMatchObject([
+    expect(
+      getBulkTableIssues(rows, 'Custom').map((rowIssues) =>
+        rowIssues.filter((issue) => issue.severity !== 'warning'),
+      ),
+    ).toMatchObject([
       [],
       [{ field: 'name', error: { key: 'error.emojiName' } }],
     ]);

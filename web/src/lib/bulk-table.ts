@@ -7,10 +7,15 @@ import {
   validatePack,
 } from './pack';
 import type { EmojiEntry } from './pack';
+import {
+  DEFAULT_NAME_WARNING_LENGTH,
+  getNameLengthWarning,
+} from './name-tools';
 
 export interface BulkTableIssue {
   field: keyof EmojiEntry;
   error: LocalizedError;
+  severity?: 'warning';
 }
 
 function fieldForError(error: LocalizedError): keyof EmojiEntry {
@@ -43,6 +48,7 @@ export function getBulkTableIssues(
   rows: readonly EmojiEntry[],
   defaultCategory: string,
   existingNames: readonly string[] = [],
+  warningThreshold = DEFAULT_NAME_WARNING_LENGTH,
 ): BulkTableIssue[][] {
   const issues = rows.map(() => [] as BulkTableIssue[]);
   const participatingRows = rows
@@ -102,6 +108,13 @@ export function getBulkTableIssues(
         error: validationError,
       });
     }
+    const warning = getNameLengthWarning(row.name, warningThreshold);
+    if (warning)
+      issues[index].push({
+        field: 'name',
+        severity: 'warning',
+        error: new LocalizedError('name.longWarning', warning),
+      });
   }
 
   return issues;

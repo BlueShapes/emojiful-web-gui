@@ -41,7 +41,10 @@ test('same-stem Nextcloud files import separately and manually introduced collis
       '重複',
     );
   }
-  await expect(page.locator('.bulk-issue-summary')).toContainText('2');
+  await expect(page.locator('.bulk-issue-summary')).toHaveText(
+    new RegExp(ja['bulk.issueSummary'].replace('{count}', '3')),
+  );
+  await expect(rows.nth(2)).toHaveClass(/bulk-row-warning/);
   await expect(rows.nth(0).locator('.bulk-cell-issue')).toHaveText(
     '絵文字名「medetai-nya」が2行目と重複しています。',
   );

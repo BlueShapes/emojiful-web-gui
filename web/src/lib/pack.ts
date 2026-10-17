@@ -60,11 +60,16 @@ function field(
   return result;
 }
 
-export function validateEmoji(value: unknown): EmojiEntry {
-  const input = object(value);
-  const name = field(input.name, 'field.emojiName', 64);
+export function validateEmojiName(value: unknown): string {
+  const name = field(value, 'field.emojiName', 64);
   if (!/^[a-z0-9_][a-z0-9_-]{0,63}$/.test(name))
     throw new LocalizedError('error.emojiName');
+  return name;
+}
+
+export function validateEmoji(value: unknown): EmojiEntry {
+  const input = object(value);
+  const name = validateEmojiName(input.name);
   const url = field(input.url, 'field.imageUrl', 2048);
   let parsed: URL;
   try {

@@ -37,6 +37,12 @@ import {
 import type { BulkFormat, EmojiEntry, EmojiPack } from '../lib/pack';
 import { importBulkTable } from '../lib/bulk-table';
 import BulkTable, { createBulkTableRows } from './BulkTable';
+import NameWarningSettings from './NameWarningSettings';
+import NameReplacement from './NameReplacement';
+import {
+  DEFAULT_NAME_WARNING_LENGTH,
+  getNameLengthWarning,
+} from '../lib/name-tools';
 import NextcloudInput, { emptyNextcloudDraft } from './NextcloudInput';
 import LegacyConversion from './LegacyConversion';
 import { importNextcloudListing, parseNextcloudFolder } from '../lib/nextcloud';
@@ -77,7 +83,7 @@ const blankEntry = (): EmojiEntry => ({
   url: '',
   category: 'Custom',
 });
-type Panel = 'single' | 'bulk' | 'installed' | 'legacy' | null;
+type Panel = 'single' | 'bulk' | 'installed' | 'legacy' | 'replace' | null;
 type WindowWithDirectoryPicker = Window & {
   showDirectoryPicker?: (options: {
     id: string;
@@ -142,6 +148,10 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
   const [storageFailed, setStorageFailed] = useState(false);
   const [restoreFailed, setRestoreFailed] = useState(false);
   const [query, setQuery] = useState('');
+  const [nameWarningLength, setNameWarningLength] = useState(
+    DEFAULT_NAME_WARNING_LENGTH,
+  );
+  const [attentionOnly, setAttentionOnly] = useState(false);
   const [category, setCategory] = useState('');
   const [panel, setPanel] = useState<Panel>(null);
   const [editing, setEditing] = useState<string | null>(null);
@@ -203,10 +213,38 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
   const visible = pack.emojis.filter(
     (emoji) =>
       (!category || emoji.category === category) &&
+      (!attentionOnly || getNameLengthWarning(emoji.name, nameWarningLength)) &&
       `${emoji.name} ${emoji.url} ${emoji.category}`
         .toLowerCase()
         .includes(query.toLowerCase()),
   );
+  const longNameCount = pack.emojis.filter((emoji) =>
+    getNameLengthWarning(emoji.name, nameWarningLength),
+  ).length;
+  const entryNameWarning = getNameLengthWarning(entry.name, nameWarningLength);
+
+  useEffect(() => {
+    try {
+      const value = Number(
+        localStorage.getItem('emojiful.pack-studio.name-warning-length'),
+      );
+      if (Number.isInteger(value) && value >= 1 && value <= 64)
+        setNameWarningLength(value);
+    } catch {
+      /* Preferences remain usable when browser storage is unavailable. */
+    }
+  }, []);
+  useEffect(() => {
+    if (!ready) return;
+    try {
+      localStorage.setItem(
+        'emojiful.pack-studio.name-warning-length',
+        String(nameWarningLength),
+      );
+    } catch {
+      /* Optional preference. */
+    }
+  }, [nameWarningLength, ready]);
 
   useEffect(() => {
     try {
@@ -408,6 +446,7 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
   }
   function resetPackView() {
     setQuery('');
+    setAttentionOnly(false);
     setCategory('');
     setOverwrite(false);
     setNotice(null);
@@ -985,6 +1024,16 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
             <div className="toolbar-actions">
               <button
                 className="button secondary"
+                disabled={!pack.emojis.length}
+                onClick={() => {
+                  setPanelError('');
+                  setPanel('replace');
+                }}
+              >
+                {t('replace.open')}
+              </button>
+              <button
+                className="button secondary"
                 onClick={() => {
                   setPanelError('');
                   setPanel('legacy');
@@ -1092,6 +1141,24 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
             />
             <span>PNG / GIF / JPG</span>
           </div>
+          <div className="name-attention-toolbar">
+            <NameWarningSettings
+              locale={locale}
+              threshold={nameWarningLength}
+              onChange={setNameWarningLength}
+            />
+            <label className="name-attention-filter">
+              <input
+                type="checkbox"
+                checked={attentionOnly}
+                onChange={(event) => setAttentionOnly(event.target.checked)}
+              />
+              {t('name.attentionOnly')}
+            </label>
+            <span className="name-attention-count">
+              {t('name.attentionCount', { count: longNameCount })}
+            </span>
+          </div>
           {notice && (
             <div
               className={`notice ${notice.error ? 'error' : ''}`}
@@ -1111,7 +1178,10 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
             {visible.length ? (
               <div className="emoji-grid">
                 {visible.map((emoji) => (
-                  <article className="emoji-card" key={emoji.name}>
+                  <article
+                    className={`emoji-card${getNameLengthWarning(emoji.name, nameWarningLength) ? ' emoji-card-warning' : ''}`}
+                    key={emoji.name}
+                  >
                     <div className="emoji-card-top">
                       <EmojiPreview emoji={emoji} locale={locale} />
                       <span className="emoji-card-actions">
@@ -1157,6 +1227,14 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
                     <strong className="emoji-name" dir="ltr">
                       :{emoji.name}:
                     </strong>
+                    {getNameLengthWarning(emoji.name, nameWarningLength) && (
+                      <p className="emoji-name-warning">
+                        {t(
+                          'name.longWarning',
+                          getNameLengthWarning(emoji.name, nameWarningLength)!,
+                        )}
+                      </p>
+                    )}
                     <span className="emoji-category" dir="auto">
                       {emoji.category}
                     </span>
@@ -1184,6 +1262,7 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
                   onClick={() => {
                     setQuery('');
                     setCategory('');
+                    setAttentionOnly(false);
                   }}
                 >
                   {t('showAll')} <ArrowLeft size={14} />
@@ -1302,7 +1381,7 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
 
       <dialog
         ref={modalRef}
-        className={`editor-dialog${panel === 'legacy' || (panel === 'bulk' && bulkMode !== 'text') ? ' bulk-table-dialog' : ''}`}
+        className={`editor-dialog${panel === 'legacy' || panel === 'replace' || (panel === 'bulk' && bulkMode !== 'text') ? ' bulk-table-dialog' : ''}`}
         onCancel={() => setPanel(null)}
         onClose={() => setPanel(null)}
       >
@@ -1314,11 +1393,13 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
                 ? editing
                   ? t('editEmoji')
                   : t('addEmoji')
-                : panel === 'legacy'
-                  ? t('legacy.title')
-                  : panel === 'bulk'
-                    ? t('bulkTitle')
-                    : t('installed.title')}
+                : panel === 'replace'
+                  ? t('replace.title')
+                  : panel === 'legacy'
+                    ? t('legacy.title')
+                    : panel === 'bulk'
+                      ? t('bulkTitle')
+                      : t('installed.title')}
             </h2>
           </div>
           <button
@@ -1335,6 +1416,29 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
           </p>
         )}
         {panel === 'legacy' && <LegacyConversion locale={locale} />}
+        {panel === 'replace' && (
+          <NameReplacement
+            locale={locale}
+            names={pack.emojis.map((emoji) => emoji.name)}
+            threshold={nameWarningLength}
+            expanded
+            scope={t('replace.scopePack', { count: pack.emojis.length })}
+            onCancel={() => setPanel(null)}
+            onApply={(names, count) => {
+              editActivePack((current) =>
+                validateDraft({
+                  ...current,
+                  emojis: current.emojis.map((emoji, index) => ({
+                    ...emoji,
+                    name: names[index],
+                  })),
+                }),
+              );
+              setPanel(null);
+              notify(t('replace.applied', { count }));
+            }}
+          />
+        )}
         {panel === 'single' && (
           <form onSubmit={saveEntry} className="editor-form">
             <label>
@@ -1363,6 +1467,7 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
                   required
                   maxLength={64}
                   value={entry.name}
+                  aria-describedby={`single-name-length${entryNameWarning ? ' single-name-warning' : ''}`}
                   placeholder="happy_cat"
                   spellCheck={false}
                   onChange={(event) =>
@@ -1374,6 +1479,20 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
                     name: normalizeName(entry.name) || 'happy_cat',
                   })}
                 </small>
+                <small id="single-name-length">
+                  {t('name.length', {
+                    length: Array.from(normalizeName(entry.name)).length,
+                  })}
+                </small>
+                {entryNameWarning && (
+                  <small
+                    className="name-length-warning"
+                    id="single-name-warning"
+                    role="status"
+                  >
+                    {t('name.longWarning', entryNameWarning)}
+                  </small>
+                )}
               </label>
               <label>
                 {t('field.category')}
@@ -1474,6 +1593,8 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
                 defaultCategory={bulkCategory}
                 urlPrefix={bulkUrlPrefix}
                 existingNames={pack.emojis.map((emoji) => emoji.name)}
+                warningThreshold={nameWarningLength}
+                onWarningThresholdChange={setNameWarningLength}
                 onChange={(rows) => {
                   setBulkRows(rows);
                   setPanelError('');
