@@ -4,6 +4,7 @@ import {
   buildNextcloudCommand,
   nextcloudImageEntry,
   parseNextcloudFolder,
+  disambiguateNextcloudNames,
 } from '../../web/src/lib/nextcloud';
 
 describe('Nextcloud public folder terminal import', () => {
@@ -115,5 +116,74 @@ describe('Nextcloud public folder terminal import', () => {
     expect(() =>
       nextcloudImageEntry(folder, '../cat.png', 0, 'Custom'),
     ).toThrow();
+  });
+});
+
+describe('Nextcloud filename collisions', () => {
+  const folder = parseNextcloudFolder('https://cloud.example/s/Share123');
+  const entries = (filenames: string[]) =>
+    filenames.map((filename, index) =>
+      nextcloudImageEntry(folder, filename, index, 'Custom')!,
+    );
+
+  it('keeps GIF and PNG files with the same stem under distinct descriptive names', () => {
+    const input = entries([
+      'medetai-nya.gif',
+      'medetai-nya.png',
+      'medetai-tai-nya.png',
+    ]);
+    const original = structuredClone(input);
+    const result = disambiguateNextcloudNames(input);
+    expect(result.map((entry) => entry.name)).toEqual([
+      'medetai-nya_gif',
+      'medetai-nya_png',
+      'medetai-tai-nya',
+    ]);
+    expect(result.map((entry) => entry.url)).toEqual(
+      input.map((entry) => entry.url),
+    );
+    expect(input).toEqual(original);
+  });
+
+  it('reserves natural names before resolving case, punctuation and generated-name collisions', () => {
+    const input = entries([
+      'cat.png',
+      'cat.gif',
+      'cat_png.png',
+      'CAT.PNG',
+      'cat_png_2.png',
+      'a b.png',
+      'a_b.png',
+      '猫.png',
+      'emoji_8.png',
+    ]);
+    const result = disambiguateNextcloudNames(input);
+    expect(result.map((entry) => entry.name)).toEqual([
+      'cat_png_3',
+      'cat_gif',
+      'cat_png',
+      'cat_png_4',
+      'cat_png_2',
+      'a_b_png',
+      'a_b_png_2',
+      'emoji_8_png',
+      'emoji_8_png_2',
+    ]);
+    expect(new Set(result.map((entry) => entry.name)).size).toBe(input.length);
+  });
+
+  it('keeps suffixed names valid at the 64-character limit', () => {
+    const result = disambiguateNextcloudNames(
+      entries([
+        `${'a'.repeat(70)}.png`,
+        `${'a'.repeat(70)}.gif`,
+        `${'a'.repeat(70)}.webp`,
+      ]),
+    );
+    expect(new Set(result.map((entry) => entry.name)).size).toBe(3);
+    for (const entry of result) {
+      expect(entry.name.length).toBeLessThanOrEqual(64);
+      expect(entry.name).toMatch(/^[a-z0-9_][a-z0-9_-]{0,63}$/);
+    }
   });
 });

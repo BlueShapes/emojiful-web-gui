@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { importBulkTable } from '../../web/src/lib/bulk-table';
+import {
+  getBulkTableIssues,
+  importBulkTable,
+} from '../../web/src/lib/bulk-table';
+import { LocalizedError } from '../../web/src/i18n';
 import { appendEntries, emptyPack, MAX_EMOJIS } from '../../web/src/lib/pack';
 
 const blank = () => ({ name: '', url: '', category: '' });
@@ -10,6 +14,93 @@ const cat = {
 };
 
 describe('table bulk input', () => {
+  it('reports every row participating in normalized duplicates, even with invalid URLs', () => {
+    const rows = [
+      { ...cat, name: ':Medetai-Nya:' },
+      { ...cat, name: 'MEDETAI-NYA', url: 'not a URL' },
+      { ...cat, name: 'medetai-nya' },
+    ];
+
+    const issues = getBulkTableIssues(rows, 'Custom');
+
+    expect(
+      issues.map((rowIssues) =>
+        rowIssues
+          .filter(({ error }) => error.key === 'error.duplicate')
+          .map(({ field, error }) => [field, error.args]),
+      ),
+    ).toEqual([
+      [['name', { index: 2, name: 'medetai-nya' }]],
+      [['name', { index: 1, name: 'medetai-nya' }]],
+      [['name', { index: 1, name: 'medetai-nya' }]],
+    ]);
+    expect(issues[1]).toContainEqual({
+      field: 'url',
+      error: expect.objectContaining({ key: 'error.urlFull' }),
+    });
+  });
+
+  it('reports conflicts with existing names and skips blank rows', () => {
+    const rows = [blank(), { ...cat, name: ' :MEDETAI-NYA: ' }, blank()];
+
+    const issues = getBulkTableIssues(rows, 'Custom', [':medetai-nya']);
+
+    expect(issues).toHaveLength(3);
+    expect(issues[0]).toEqual([]);
+    expect(issues[1]).toEqual([
+      {
+        field: 'name',
+        error: expect.objectContaining({
+          key: 'error.nameUsed',
+          args: { name: 'medetai-nya' },
+        }),
+      },
+    ]);
+    expect(issues[2]).toEqual([]);
+  });
+
+  it('uses the default category and maps the first validation error to its field', () => {
+    const rows = [
+      { ...cat, name: 'invalid name' },
+      { ...cat, name: 'bad_url', url: 'not a URL', category: '   ' },
+      { ...cat, name: 'bad_category', category: 'x'.repeat(81) },
+      { ...cat, name: 'uses_default', category: '  ' },
+    ];
+
+    const issues = getBulkTableIssues(rows, 'Custom');
+
+    expect(
+      issues.map((rowIssues) =>
+        rowIssues.map(({ field, error }) => [field, error.key]),
+      ),
+    ).toEqual([
+      [['name', 'error.emojiName']],
+      [['url', 'error.urlFull']],
+      [['category', 'error.fieldLength']],
+      [],
+    ]);
+    const categoryError = issues[2][0].error;
+    expect(categoryError.args.field).toBeInstanceOf(LocalizedError);
+    expect((categoryError.args.field as LocalizedError).key).toBe(
+      'field.category',
+    );
+  });
+
+  it('removes corrected-row issues and leaves the input rows unchanged', () => {
+    const rows = [blank(), { ...cat, name: 'invalid name' }];
+    const original = structuredClone(rows);
+
+    expect(getBulkTableIssues(rows, 'Custom')).toMatchObject([
+      [],
+      [{ field: 'name', error: { key: 'error.emojiName' } }],
+    ]);
+    expect(rows).toEqual(original);
+    expect(
+      getBulkTableIssues([rows[0], { ...cat, name: 'fixed_name' }], 'Custom'),
+    ).toEqual([[], []]);
+    expect(rows).toEqual(original);
+  });
+
   it('normalizes names, skips empty rows and applies the default category', () => {
     const rows = [
       blank(),
