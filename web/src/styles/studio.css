@@ -1151,6 +1151,14 @@ dialog::backdrop {
 .bulk-cell-warning {
   color: #76551b;
 }
+.editor-form input[aria-invalid='true'] {
+  border-color: var(--error);
+}
+.editor-form .name-character-error {
+  margin: 0;
+  color: var(--error);
+  line-height: 1.6;
+}
 .name-replacement {
   display: flex;
   flex-direction: column;

@@ -32,6 +32,7 @@ import {
   readPackFile,
   validateDraft,
   validateEmoji,
+  validateEmojiName,
   validatePack,
 } from '../lib/pack';
 import type { BulkFormat, EmojiEntry, EmojiPack } from '../lib/pack';
@@ -221,7 +222,17 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
   const longNameCount = pack.emojis.filter((emoji) =>
     getNameLengthWarning(emoji.name, nameWarningLength),
   ).length;
-  const entryNameWarning = getNameLengthWarning(entry.name, nameWarningLength);
+  let entryNameError = '';
+  if (entry.name) {
+    try {
+      validateEmojiName(normalizeName(entry.name));
+    } catch (error) {
+      entryNameError = errorMessage(error, locale);
+    }
+  }
+  const entryNameWarning = entryNameError
+    ? null
+    : getNameLengthWarning(entry.name, nameWarningLength);
 
   useEffect(() => {
     try {
@@ -1467,13 +1478,24 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
                   required
                   maxLength={64}
                   value={entry.name}
-                  aria-describedby={`single-name-length${entryNameWarning ? ' single-name-warning' : ''}`}
+                  aria-invalid={!!entryNameError || undefined}
+                  aria-describedby={`single-name-length${entryNameError ? ' single-name-error' : entryNameWarning ? ' single-name-warning' : ''}`}
                   placeholder="happy_cat"
                   spellCheck={false}
-                  onChange={(event) =>
-                    setEntry({ ...entry, name: event.target.value })
-                  }
+                  onChange={(event) => {
+                    setEntry({ ...entry, name: event.target.value });
+                    setPanelError('');
+                  }}
                 />
+                {entryNameError && (
+                  <small
+                    id="single-name-error"
+                    className="form-error name-character-error"
+                    role="alert"
+                  >
+                    {entryNameError}
+                  </small>
+                )}
                 <small>
                   {t('emojiNameHelp', {
                     name: normalizeName(entry.name) || 'happy_cat',
@@ -1521,7 +1543,11 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
               >
                 {t('cancel')}
               </button>
-              <button className="button primary" type="submit">
+              <button
+                className="button primary"
+                type="submit"
+                disabled={!!entryNameError}
+              >
                 <Check size={16} />
                 {editing ? t('saveChanges') : t('add')}
               </button>

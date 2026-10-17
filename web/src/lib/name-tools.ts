@@ -101,12 +101,6 @@ export function previewNameReplacement(
         throw new NameReplacementError('tooLarge');
       names[index] = after;
       changes.push({ index, before, after });
-
-      try {
-        validateEmojiName(after);
-      } catch {
-        problemsByIndex[index].add('invalid');
-      }
     } else if (before.length > MAX_RESULT_LENGTH) {
       throw new NameReplacementError('tooLarge');
     }
@@ -116,6 +110,11 @@ export function previewNameReplacement(
   for (let index = 0; index < request.names.length; index += 1) {
     if (request.names[index] === '') continue;
     const normalized = normalizeName(names[index]);
+    try {
+      validateEmojiName(normalized);
+    } catch {
+      problemsByIndex[index].add('invalid');
+    }
     if (!normalized) continue;
     const rows = participants.get(normalized) ?? [];
     rows.push(index);

@@ -191,7 +191,7 @@
   "error.object": "JSONオブジェクトを指定してください。",
   "error.fieldString": "{field}はテキストで入力してください。",
   "error.fieldLength": "{field}は改行や制御文字を含めず、{min}～{max}文字で入力してください。",
-  "error.emojiName": "絵文字名には半角小文字の英字、数字、_、- を使用できます。先頭に - は使えません。",
+  "error.emojiName": "絵文字名は半角英小文字・数字・_・-のみ使用できます。日本語や全角文字などを除き、名前を修正してください（先頭の-は不可）。",
   "error.urlFull": "http:// または https:// で始まる画像URLを入力してください。",
   "error.urlSafe": "認証情報や空白を含まないHTTP(S)画像URLを使用してください。",
   "error.schema": "未対応のプロジェクト形式です（schemaVersion: 1 が必要です）。",

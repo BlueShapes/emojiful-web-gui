@@ -239,6 +239,9 @@ export default function NameReplacement({
               ].map((kind) => (
                 <p key={kind}>{t(`replace.problem.${kind}`)}</p>
               ))}
+              {preview.problems.some(
+                (problem) => problem.kind === 'invalid',
+              ) && <p>{t('error.emojiName')}</p>}
             </div>
           )}
           {previewRows.length > 0 && (

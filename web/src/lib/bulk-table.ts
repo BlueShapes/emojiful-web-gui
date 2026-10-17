@@ -92,6 +92,7 @@ export function getBulkTableIssues(
   }
 
   for (const { row, index } of participatingRows) {
+    let invalidName = false;
     try {
       validateEmoji({
         name: normalizeName(row.name),
@@ -103,12 +104,16 @@ export function getBulkTableIssues(
         error instanceof LocalizedError
           ? error
           : new LocalizedError('error.failed');
+      const field = fieldForError(validationError);
+      invalidName = field === 'name';
       issues[index].push({
-        field: fieldForError(validationError),
+        field,
         error: validationError,
       });
     }
-    const warning = getNameLengthWarning(row.name, warningThreshold);
+    const warning = invalidName
+      ? null
+      : getNameLengthWarning(row.name, warningThreshold);
     if (warning)
       issues[index].push({
         field: 'name',

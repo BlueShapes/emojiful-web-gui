@@ -61,6 +61,8 @@ function field(
 }
 
 export function validateEmojiName(value: unknown): string {
+  if (typeof value === 'string' && /[^\x00-\x7f]/.test(value))
+    throw new LocalizedError('error.emojiName');
   const name = field(value, 'field.emojiName', 64);
   if (!/^[a-z0-9_][a-z0-9_-]{0,63}$/.test(name))
     throw new LocalizedError('error.emojiName');
@@ -177,8 +179,15 @@ export function validateDraft(value: unknown): EmojiPack {
 export function errorMessage(error: unknown, locale: Locale = 'ja'): string {
   return localizedErrorMessage(error, locale);
 }
+function trimAsciiWhitespace(value: string): string {
+  return value.replace(/^[\u0009-\u000d ]+|[\u0009-\u000d ]+$/g, '');
+}
 export function normalizeName(name: string): string {
-  return name.trim().replace(/^:|:$/g, '').toLowerCase();
+  // Non-ASCII characters must reach validation instead of disappearing or
+  // turning into ASCII through Unicode case conversion (for example K → k).
+  return trimAsciiWhitespace(name)
+    .replace(/^:|:$/g, '')
+    .replace(/[A-Z]/g, (letter) => letter.toLowerCase());
 }
 export function nameFromUrl(url: string, index: number): string {
   try {
@@ -204,7 +213,7 @@ export function importBulk(
 ): EmojiEntry[] {
   if (strToU8(text).length > MAX_IMPORT_BYTES)
     throw new LocalizedError('error.inputSize');
-  const source = text.replace(/^\uFEFF/, '').trim();
+  const source = trimAsciiWhitespace(text.replace(/^\uFEFF/, ''));
   if (!source) throw new LocalizedError('error.inputEmpty');
   let entries: unknown[];
   if (format === 'json' || (format === 'auto' && /^[\[{]/.test(source))) {
