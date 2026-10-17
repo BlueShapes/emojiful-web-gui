@@ -118,6 +118,9 @@ test('sorts the collection naturally in every order without changing saved pack 
   await sort.selectOption('name-asc');
   await expect.poll(() => names(page)).toEqual(['alpha_2', 'alpha_10']);
   await page.getByLabel(ja.search, { exact: true }).fill('');
+  await page.locator('.category-item').filter({ hasText: 'Animals' }).click();
+  await expect.poll(() => names(page)).toEqual(['alpha_2', 'alpha_10']);
+  await page.locator('.category-item').first().click();
   await page.getByLabel(ja['name.attentionOnly'], { exact: true }).check();
   await expect.poll(() => names(page)).toEqual(['very_long_name']);
   await page.getByLabel(ja['name.attentionOnly'], { exact: true }).uncheck();
@@ -173,6 +176,12 @@ test('cards, list and compact retain diagnostics and correct edit/delete targets
     } else {
       await expect(page.locator('.emoji-url').first()).toBeVisible();
     }
+    if (mode !== 'cards') {
+      await page.screenshot({
+        path: `.work/collection-${mode}-desktop.png`,
+        fullPage: true,
+      });
+    }
   }
   await page
     .getByLabel(ja['collection.sort'], { exact: true })
@@ -225,7 +234,7 @@ test('cards, list and compact retain diagnostics and correct edit/delete targets
   ).toHaveValue('name-desc');
 });
 
-test('all display modes and controls fit mobile Japanese and Arabic collections', async ({
+test('all display modes and controls fit mobile and narrow Japanese and Arabic collections', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
@@ -242,22 +251,41 @@ test('all display modes and controls fit mobile Japanese and Arabic collections'
     await page.goto(`/${locale}/`);
     const view = page.getByLabel(messages['collection.view'], { exact: true });
     await expect(view).toBeVisible({ timeout: 2000 });
-    for (const mode of ['cards', 'list', 'compact']) {
-      await view.selectOption(mode);
-      await page
-        .getByLabel(messages['collection.sort'], { exact: true })
-        .selectOption('attention');
-      await expect
-        .poll(() => names(page))
-        .toEqual(['smile', 'very_long_name_nya', 'short_nya']);
-      await expect(page.locator('.emoji-name-error')).toBeVisible();
-      await expect(page.locator('.emoji-name-warning')).toBeVisible();
-      expect(
-        await page.evaluate(
-          () => document.documentElement.scrollWidth <= innerWidth,
-        ),
-      ).toBe(true);
+    for (const width of [390, 701, 720, 960]) {
+      await page.setViewportSize({ width, height: 844 });
+      for (const mode of ['cards', 'list', 'compact']) {
+        await view.selectOption(mode);
+        await page
+          .getByLabel(messages['collection.sort'], { exact: true })
+          .selectOption('attention');
+        await expect
+          .poll(() => names(page))
+          .toEqual(['smile', 'very_long_name_nya', 'short_nya']);
+        await expect(page.locator('.emoji-name-error')).toBeVisible();
+        await expect(page.locator('.emoji-name-warning')).toBeVisible();
+        expect(
+          await page.evaluate(
+            () => document.documentElement.scrollWidth <= innerWidth,
+          ),
+          `${locale} ${width}px ${mode}`,
+        ).toBe(true);
+        expect(
+          await page.locator('.emoji-card').evaluateAll((cards) =>
+            cards.every((card) => {
+              const bounds = card.getBoundingClientRect();
+              return [...card.querySelectorAll('button')].every((button) => {
+                const action = button.getBoundingClientRect();
+                return (
+                  action.left >= bounds.left && action.right <= bounds.right
+                );
+              });
+            }),
+          ),
+          `action bounds: ${locale} ${width}px ${mode}`,
+        ).toBe(true);
+      }
     }
+    await page.setViewportSize({ width: 390, height: 844 });
     await page.screenshot({
       path: `.work/collection-compact-${locale}.png`,
       fullPage: true,

@@ -38,6 +38,19 @@ import {
 import type { BulkFormat, EmojiEntry, EmojiPack } from '../lib/pack';
 import { isBuiltinEmojiName } from '../lib/builtin-emojis';
 import { importBulkTable } from '../lib/bulk-table';
+import {
+  COLLECTION_PREFERENCES_KEY,
+  COLLECTION_SORTS,
+  COLLECTION_VIEWS,
+  DEFAULT_COLLECTION_PREFERENCES,
+  parseCollectionPreferences,
+  sortCollectionEmojis,
+} from '../lib/collection-view';
+import type {
+  CollectionPreferences,
+  CollectionSort,
+  CollectionView,
+} from '../lib/collection-view';
 import BulkTable, { createBulkTableRows } from './BulkTable';
 import NameWarningSettings from './NameWarningSettings';
 import NameReplacement from './NameReplacement';
@@ -153,6 +166,10 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
   const [nameWarningLength, setNameWarningLength] = useState(
     DEFAULT_NAME_WARNING_LENGTH,
   );
+  const [collectionPreferences, setCollectionPreferences] =
+    useState<CollectionPreferences>(DEFAULT_COLLECTION_PREFERENCES);
+  const [collectionPreferencesReady, setCollectionPreferencesReady] =
+    useState(false);
   const [attentionOnly, setAttentionOnly] = useState(false);
   const [category, setCategory] = useState('');
   const [panel, setPanel] = useState<Panel>(null);
@@ -212,7 +229,7 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
   ].sort((a, b) =>
     a.localeCompare(b, locales.find((item) => item.code === locale)?.htmlLang),
   );
-  const visible = pack.emojis.filter(
+  const filtered = pack.emojis.filter(
     (emoji) =>
       (!category || emoji.category === category) &&
       (!attentionOnly ||
@@ -221,6 +238,12 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
       `${emoji.name} ${emoji.url} ${emoji.category}`
         .toLowerCase()
         .includes(query.toLowerCase()),
+  );
+  const visible = sortCollectionEmojis(
+    filtered,
+    collectionPreferences.sort,
+    locale,
+    nameWarningLength,
   );
   const longNameCount = pack.emojis.filter(
     (emoji) =>
@@ -241,6 +264,31 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
   const entryNameWarning = entryNameError
     ? null
     : getNameLengthWarning(entry.name, nameWarningLength);
+
+  useEffect(() => {
+    try {
+      setCollectionPreferences(
+        parseCollectionPreferences(
+          localStorage.getItem(COLLECTION_PREFERENCES_KEY),
+        ),
+      );
+    } catch {
+      setCollectionPreferences(DEFAULT_COLLECTION_PREFERENCES);
+    } finally {
+      setCollectionPreferencesReady(true);
+    }
+  }, []);
+  useEffect(() => {
+    if (!collectionPreferencesReady) return;
+    try {
+      localStorage.setItem(
+        COLLECTION_PREFERENCES_KEY,
+        JSON.stringify(collectionPreferences),
+      );
+    } catch {
+      /* Collection preferences are optional. */
+    }
+  }, [collectionPreferences, collectionPreferencesReady]);
 
   useEffect(() => {
     try {
@@ -1163,6 +1211,48 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
             />
             <span>PNG / GIF / JPG</span>
           </div>
+          <div className="collection-preferences">
+            <label className="collection-preference">
+              <span>{t('collection.view')}</span>
+              <select
+                aria-label={t('collection.view')}
+                value={collectionPreferences.view}
+                onChange={(event) => {
+                  const view = event.currentTarget.value as CollectionView;
+                  setCollectionPreferences((current) => ({
+                    ...current,
+                    view,
+                  }));
+                }}
+              >
+                {COLLECTION_VIEWS.map((view) => (
+                  <option key={view} value={view}>
+                    {t(`collection.view.${view}`)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="collection-preference">
+              <span>{t('collection.sort')}</span>
+              <select
+                aria-label={t('collection.sort')}
+                value={collectionPreferences.sort}
+                onChange={(event) => {
+                  const sort = event.currentTarget.value as CollectionSort;
+                  setCollectionPreferences((current) => ({
+                    ...current,
+                    sort,
+                  }));
+                }}
+              >
+                {COLLECTION_SORTS.map((sort) => (
+                  <option key={sort} value={sort}>
+                    {t(`collection.sort.${sort}`)}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
           <div className="name-attention-toolbar">
             <NameWarningSettings
               locale={locale}
@@ -1203,7 +1293,10 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
           )}
           <div className="collection-body">
             {visible.length ? (
-              <div className="emoji-grid">
+              <div
+                className={`emoji-grid collection-view-${collectionPreferences.view}`}
+                data-view={collectionPreferences.view}
+              >
                 {visible.map((emoji) => (
                   <article
                     className={`emoji-card${isBuiltinEmojiName(emoji.name) ? ' emoji-card-error' : getNameLengthWarning(emoji.name, nameWarningLength) ? ' emoji-card-warning' : ''}`}

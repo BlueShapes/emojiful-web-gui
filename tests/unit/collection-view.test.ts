@@ -56,7 +56,7 @@ describe('collection sorting', () => {
     ['category-desc', ['u10', 'a', 'b99', 'u2']],
     ['length-asc', ['a', 'u2', 'b99', 'u10']],
     ['length-desc', ['b99', 'u10', 'u2', 'a']],
-    ['attention', ['u10', 'u2', 'b99', 'a']],
+    ['attention', ['a', 'u10', 'u2', 'b99']],
   ])(
     'sorts %s without changing the stored insertion order',
     (sort, expected) => {

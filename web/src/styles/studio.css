@@ -555,6 +555,34 @@ p {
   letter-spacing: 1px;
   white-space: nowrap;
 }
+.collection-preferences {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 9px 18px;
+  margin: -7px 0 17px;
+  min-width: 0;
+}
+.collection-preference {
+  display: grid;
+  grid-template-columns: auto minmax(105px, 190px);
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  color: var(--muted);
+  font-size: 10px;
+}
+.collection-preference select {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+}
 .notice {
   display: flex;
   align-items: center;
@@ -701,6 +729,115 @@ p {
 }
 .emoji-url svg {
   margin-left: auto;
+}
+.emoji-grid.collection-view-list {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+}
+.collection-view-list .emoji-card {
+  display: grid;
+  grid-template-columns:
+    48px minmax(110px, 1fr) minmax(80px, auto) minmax(0, 1fr)
+    auto;
+  align-items: center;
+  gap: 7px 12px;
+  padding: 10px 12px;
+}
+.collection-view-list .emoji-card-top {
+  display: contents;
+}
+.collection-view-list .emoji-preview {
+  grid-column: 1;
+  grid-row: 1;
+  width: 42px;
+  height: 42px;
+}
+.collection-view-list .emoji-preview img {
+  width: 30px;
+  height: 30px;
+}
+.collection-view-list .emoji-name {
+  grid-column: 2;
+  grid-row: 1;
+  min-width: 0;
+}
+.collection-view-list .emoji-card-actions {
+  grid-column: 5;
+  grid-row: 1;
+}
+.collection-view-list .emoji-name-error,
+.collection-view-list .emoji-name-warning {
+  grid-column: 2 / 5;
+  grid-row: 2;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.collection-view-list .emoji-category {
+  grid-column: 3;
+  grid-row: 1;
+  margin-top: 0;
+  min-width: 0;
+}
+.collection-view-list .emoji-url {
+  grid-column: 4;
+  grid-row: 1;
+  min-width: 0;
+  margin-top: 0;
+}
+.emoji-grid.collection-view-compact {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+  gap: 8px;
+}
+.collection-view-compact .emoji-card {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+}
+.collection-view-compact .emoji-card-top {
+  display: contents;
+  margin: 0;
+}
+.collection-view-compact .emoji-preview {
+  grid-column: 1;
+  grid-row: 1;
+  width: 32px;
+  height: 32px;
+  border-radius: 7px;
+}
+.collection-view-compact .emoji-preview img {
+  width: 24px;
+  height: 24px;
+}
+.collection-view-compact .emoji-name {
+  grid-column: 2;
+  grid-row: 1;
+  min-width: 0;
+  font-size: 10px;
+  overflow-wrap: anywhere;
+}
+.collection-view-compact .emoji-card-actions {
+  grid-column: 3;
+  grid-row: 1;
+  justify-self: end;
+}
+.collection-view-compact .emoji-card-actions .icon-button {
+  width: 26px;
+  min-width: 26px;
+  height: 26px;
+}
+.collection-view-compact .emoji-name-error,
+.collection-view-compact .emoji-name-warning {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+.collection-view-compact .emoji-category,
+.collection-view-compact .emoji-url {
+  display: none;
 }
 .empty-state {
   padding: 48px 10px 44px;
@@ -1561,12 +1698,66 @@ dialog::backdrop {
   .search-row > span {
     display: none;
   }
+  .collection-preferences {
+    align-items: stretch;
+    gap: 8px;
+  }
+  .collection-preference {
+    flex: 1 1 180px;
+    grid-template-columns: minmax(64px, auto) minmax(0, 1fr);
+    gap: 6px;
+    font-size: 9px;
+  }
+  .collection-preference select {
+    padding: 8px 7px;
+    font-size: 10px;
+  }
   .emoji-grid {
     grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
     gap: 10px;
   }
   .emoji-card {
     padding: 12px;
+  }
+  .collection-view-list .emoji-card {
+    grid-template-columns: 40px minmax(0, 1fr) auto;
+    gap: 5px 9px;
+    padding: 9px;
+  }
+  .collection-view-list .emoji-preview {
+    grid-column: 1;
+    grid-row: 1;
+    width: 36px;
+    height: 36px;
+  }
+  .collection-view-list .emoji-preview img {
+    width: 26px;
+    height: 26px;
+  }
+  .collection-view-list .emoji-name {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .collection-view-list .emoji-card-actions {
+    grid-column: 3;
+    grid-row: 1;
+  }
+  .collection-view-list .emoji-name-error,
+  .collection-view-list .emoji-name-warning {
+    grid-column: 2 / 4;
+    grid-row: 2;
+  }
+  .collection-view-list .emoji-category {
+    grid-column: 2 / 4;
+    grid-row: 3;
+    justify-self: start;
+  }
+  .collection-view-list .emoji-url {
+    grid-column: 2 / 4;
+    grid-row: 4;
+  }
+  .emoji-grid.collection-view-compact {
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
   }
   .emoji-preview {
     width: 48px;
