@@ -73,7 +73,10 @@ test('terminal listing becomes editable rows before an atomic pack addition', as
   const rows = page.locator('.bulk-table tbody tr');
   await expect(rows).toHaveCount(2);
   await expect(rows.nth(0).getByRole('textbox').nth(0)).toHaveValue(
-    'happy_cat',
+    'Happy Cat',
+  );
+  await expect(rows.nth(0).locator('.bulk-source-filename bdi')).toHaveText(
+    'Happy Cat.PNG',
   );
   const imageUrl = rows.nth(0).getByRole('textbox').nth(1);
   const originalUrl = `https://cloud.example${root}Happy%20Cat.PNG`;
@@ -112,6 +115,9 @@ test('terminal listing becomes editable rows before an atomic pack addition', as
   await expect(filename).toHaveText('Comfy%20Cat.PNG');
   await expect(filename).toBeVisible();
   await expect(rows.nth(0).getByRole('textbox').nth(2)).toHaveValue('Animals');
+  await expect(rows.nth(0).locator('.bulk-source-filename bdi')).toHaveText(
+    'Happy Cat.PNG',
+  );
   expect(remoteRequests).toEqual([]);
   const draft = await page.evaluate(() =>
     JSON.parse(localStorage.getItem('emojiful.pack-studio.workspace.v1')!),
@@ -215,10 +221,10 @@ test('XML files support duplicate-name repair and report empty image listings', 
     .click();
   const nameInputs = page.locator('.bulk-table tbody tr');
   await expect(nameInputs.nth(0).getByRole('textbox').nth(0)).toHaveValue(
-    'my_cat_png',
+    'my_cat',
   );
   await expect(nameInputs.nth(1).getByRole('textbox').nth(0)).toHaveValue(
-    'my_cat_gif',
+    'my_cat',
   );
   await nameInputs.nth(0).getByRole('textbox').nth(0).fill('my_cat');
   await nameInputs.nth(1).getByRole('textbox').nth(0).fill('my_cat');

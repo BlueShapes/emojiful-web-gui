@@ -7,7 +7,7 @@ function listing(...filenames: string[]) {
   return `<?xml version="1.0"?><d:multistatus xmlns:d="DAV:">${filenames.map((filename) => `<d:response><d:href>${root}${encodeURIComponent(filename)}</d:href><d:propstat><d:prop><d:resourcetype/></d:prop><d:status>HTTP/1.1 200 OK</d:status></d:propstat></d:response>`).join('')}</d:multistatus>`;
 }
 
-test('same-stem Nextcloud files import separately and manually introduced collisions highlight every row', async ({
+test('same-stem Nextcloud files retain their original names and require explicit duplicate repair', async ({
   page,
 }) => {
   await page.route('https://cloud.example/**', (route) => route.abort());
@@ -28,9 +28,11 @@ test('same-stem Nextcloud files import separately and manually introduced collis
   const rows = page.locator('.bulk-table tbody tr');
   const name = (index: number) => rows.nth(index).getByRole('textbox').nth(0);
   await expect(rows).toHaveCount(3);
-  await expect(name(0)).toHaveValue('medetai-nya_gif');
-  await expect(name(1)).toHaveValue('medetai-nya_png');
-  await expect(page.locator('.bulk-row-issue')).toHaveCount(0);
+  await expect(name(0)).toHaveValue('medetai-nya');
+  await expect(name(1)).toHaveValue('medetai-nya');
+  await expect(rows.nth(0).locator('.bulk-source-filename bdi')).toHaveText('medetai-nya.gif');
+  await expect(rows.nth(1).locator('.bulk-source-filename bdi')).toHaveText('medetai-nya.png');
+  await expect(page.locator('.bulk-row-issue')).toHaveCount(2);
   await name(0).fill('medetai-nya');
   await name(1).fill(':MEDETAI-NYA:');
   await expect(page.locator('.bulk-row-issue')).toHaveCount(2);

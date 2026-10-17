@@ -1,11 +1,46 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { execFileSync } from 'node:child_process';
 import {
   buildNextcloudCommand,
   nextcloudImageEntry,
   parseNextcloudFolder,
-  disambiguateNextcloudNames,
+  importNextcloudListing,
 } from '../../web/src/lib/nextcloud';
+import { getBulkTableIssues, importBulkTable } from '../../web/src/lib/bulk-table';
+
+afterEach(() => vi.unstubAllGlobals());
+
+function stubListingDomParser() {
+  const element = (
+    localName: string,
+    textContent = '',
+    children: Element[] = [],
+  ) =>
+    ({ namespaceURI: 'DAV:', localName, textContent, children }) as unknown as Element;
+  vi.stubGlobal(
+    'DOMParser',
+    class {
+      parseFromString(source: string) {
+        const hrefs = [...source.matchAll(/<d:href>(.*?)<\/d:href>/g)].map(
+          (match) => match[1],
+        );
+        const responses = hrefs.map((href) =>
+          element('response', '', [
+            element('href', href),
+            element('propstat', '', [
+              element('prop', '', [element('resourcetype')]),
+              element('status', 'HTTP/1.1 200 OK'),
+            ]),
+          ]),
+        );
+        return {
+          documentElement: element('multistatus', '', responses),
+          getElementsByTagName: () => [],
+        } as unknown as Document;
+      }
+    },
+  );
+}
 
 describe('Nextcloud public folder terminal import', () => {
   it.skipIf(process.platform !== 'win32')(
@@ -95,95 +130,106 @@ describe('Nextcloud public folder terminal import', () => {
     }
   });
 
-  it('keeps filename case in image URLs and uses existing name normalization', () => {
+  it('preserves the original filename stem and full filename', () => {
     const folder = parseNextcloudFolder(
       'https://cloud.example/s/Share123',
       '/Animals',
     );
     expect(nextcloudImageEntry(folder, 'Happy Cat.PNG', 0, 'Animals')).toEqual({
-      name: 'happy_cat',
+      name: 'Happy Cat',
       url: 'https://cloud.example/public.php/dav/files/Share123/Animals/Happy%20Cat.PNG',
       category: 'Animals',
+      sourceFilename: 'Happy Cat.PNG',
     });
-    expect(nextcloudImageEntry(folder, '猫.gif', 1, '動物')?.name).toBe(
-      'emoji_2',
-    );
+    expect(nextcloudImageEntry(folder, '猫.gif', 1, '動物')).toMatchObject({
+      name: '猫',
+      sourceFilename: '猫.gif',
+    });
     expect(
-      nextcloudImageEntry(folder, 'a#b&c%.webp', 0, 'Custom')?.url,
+      nextcloudImageEntry(folder, `${'a'.repeat(70)}.png`, 2, 'Custom')?.name,
+    ).toBe('a'.repeat(70));
+    expect(
+      nextcloudImageEntry(folder, 'a#b&c%.webp', 3, 'Custom')?.url,
     ).toContain('a%23b%26c%25.webp');
     for (const filename of ['notes.txt', 'vector.svg', 'folder'])
-      expect(nextcloudImageEntry(folder, filename, 0, 'Custom')).toBeNull();
+      expect(nextcloudImageEntry(folder, filename, 4, 'Custom')).toBeNull();
     expect(() =>
-      nextcloudImageEntry(folder, '../cat.png', 0, 'Custom'),
+      nextcloudImageEntry(folder, '../cat.png', 5, 'Custom'),
     ).toThrow();
   });
 });
 
-describe('Nextcloud filename collisions', () => {
+describe('Nextcloud filename preservation', () => {
   const folder = parseNextcloudFolder('https://cloud.example/s/Share123');
-  const entries = (filenames: string[]) =>
-    filenames.map((filename, index) =>
-      nextcloudImageEntry(folder, filename, index, 'Custom')!,
-    );
+  const listing = (filenames: string[]) =>
+    `<d:multistatus xmlns:d="DAV:">${filenames
+      .map(
+        (filename) =>
+          `<d:response><d:href>${folder.davUrl}${encodeURIComponent(filename)}</d:href><d:propstat><d:prop><d:resourcetype/></d:prop><d:status>HTTP/1.1 200 OK</d:status></d:propstat></d:response>`,
+      )
+      .join('')}</d:multistatus>`;
 
-  it('keeps GIF and PNG files with the same stem under distinct descriptive names', () => {
-    const input = entries([
-      'medetai-nya.gif',
-      'medetai-nya.png',
-      'medetai-tai-nya.png',
-    ]);
-    const original = structuredClone(input);
-    const result = disambiguateNextcloudNames(input);
-    expect(result.map((entry) => entry.name)).toEqual([
-      'medetai-nya_gif',
-      'medetai-nya_png',
-      'medetai-tai-nya',
-    ]);
-    expect(result.map((entry) => entry.url)).toEqual(
-      input.map((entry) => entry.url),
+  it('keeps same-stem images with their original filenames and URLs', () => {
+    stubListingDomParser();
+    const entries = importNextcloudListing(
+      listing(['same.gif', 'same.png']),
+      folder,
+      'Custom',
     );
-    expect(input).toEqual(original);
+    expect(entries).toMatchObject([
+      { name: 'same', sourceFilename: 'same.gif' },
+      { name: 'same', sourceFilename: 'same.png' },
+    ]);
+    expect(entries.map(({ url }) => url)).toEqual([
+      `${folder.davUrl}same.gif`,
+      `${folder.davUrl}same.png`,
+    ]);
+
+    const issues = getBulkTableIssues(entries, 'Custom');
+    expect(
+      issues.map((row) => row.map(({ error }) => error.key)),
+    ).toEqual([
+      ['error.duplicate'],
+      ['error.duplicate'],
+    ]);
+    expect(() => importBulkTable(entries, 'Custom')).toThrow();
+
+    const corrected = entries.map((entry, index) =>
+      index === 0 ? entry : { ...entry, name: 'same_png' },
+    );
+    expect(importBulkTable(corrected, 'Custom')).toEqual([
+      { name: 'same', url: entries[0].url, category: 'Custom' },
+      { name: 'same_png', url: entries[1].url, category: 'Custom' },
+    ]);
   });
 
-  it('reserves natural names before resolving case, punctuation and generated-name collisions', () => {
-    const input = entries([
-      'cat.png',
-      'cat.gif',
-      'cat_png.png',
-      'CAT.PNG',
-      'cat_png_2.png',
-      'a b.png',
-      'a_b.png',
-      '猫.png',
-      'emoji_8.png',
-    ]);
-    const result = disambiguateNextcloudNames(input);
-    expect(result.map((entry) => entry.name)).toEqual([
-      'cat_png_3',
-      'cat_gif',
-      'cat_png',
-      'cat_png_4',
-      'cat_png_2',
-      'a_b_png',
-      'a_b_png_2',
-      'emoji_8_png',
-      'emoji_8_png_2',
-    ]);
-    expect(new Set(result.map((entry) => entry.name)).size).toBe(input.length);
-  });
-
-  it('keeps suffixed names valid at the 64-character limit', () => {
-    const result = disambiguateNextcloudNames(
-      entries([
-        `${'a'.repeat(70)}.png`,
-        `${'a'.repeat(70)}.gif`,
-        `${'a'.repeat(70)}.webp`,
-      ]),
+  it('retains Unicode, spaces, case, and names longer than 64 characters in previews', () => {
+    stubListingDomParser();
+    const entries = importNextcloudListing(
+      listing(['ショパン-nya.png', 'バッハ-nya.png', '猫.gif', 'Happy Cat.PNG', `${'x'.repeat(70)}.webp`]),
+      folder,
+      'Custom',
     );
-    expect(new Set(result.map((entry) => entry.name)).size).toBe(3);
-    for (const entry of result) {
-      expect(entry.name.length).toBeLessThanOrEqual(64);
-      expect(entry.name).toMatch(/^[a-z0-9_][a-z0-9_-]{0,63}$/);
-    }
+    expect(entries.map(({ name, sourceFilename }) => [name, sourceFilename])).toEqual([
+      ['ショパン-nya', 'ショパン-nya.png'],
+      ['バッハ-nya', 'バッハ-nya.png'],
+      ['猫', '猫.gif'],
+      ['Happy Cat', 'Happy Cat.PNG'],
+      ['x'.repeat(70), `${'x'.repeat(70)}.webp`],
+    ]);
+
+    const invalidIssues = getBulkTableIssues([entries[0], entries[2]], 'Custom');
+    expect(invalidIssues.map((row) => row[0]?.error.key)).toEqual([
+      'error.emojiName',
+      'error.emojiName',
+    ]);
+    const fixed = [
+      { ...entries[0], name: 'chopin_nya' },
+      { ...entries[2], name: 'neko' },
+    ];
+    expect(importBulkTable(fixed, 'Custom')).toEqual([
+      { name: 'chopin_nya', url: entries[0].url, category: 'Custom' },
+      { name: 'neko', url: entries[2].url, category: 'Custom' },
+    ]);
   });
 });
