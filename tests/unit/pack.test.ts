@@ -8,6 +8,8 @@ import {
   importPackZip,
   validateDraft,
   validateEmoji,
+  validateEmojiName,
+  normalizeName,
   validatePack,
 } from '../../web/src/lib/pack';
 
@@ -153,6 +155,42 @@ describe('all-or-nothing bulk import', () => {
 });
 
 describe('validation and draft persistence', () => {
+  it.each([
+    'にゃん',
+    'cat猫',
+    'ｶﾀｶﾅ',
+    'ｃａｔ',
+    'café',
+    'cat😺',
+    'catK',
+    'İcat',
+    '\u3000cat\u3000',
+    '\u00a0cat',
+  ])(
+    'rejects non-ASCII emoji name %s before and after normalization',
+    (name) => {
+      expect(() => validateEmojiName(name)).toThrow();
+      expect(() =>
+        validateEmoji({ ...cat, name: normalizeName(name) }),
+      ).toThrow();
+      expect(() =>
+        importBulk(`${name},https://example.com/cat.png`, '動物'),
+      ).toThrow();
+      expect(() =>
+        exportPack({ ...pack, emojis: [{ ...cat, name }] }),
+      ).toThrow();
+    },
+  );
+  it('retains supported ASCII punctuation and allows Japanese categories and image URLs', () => {
+    expect(
+      validateEmoji({
+        ...cat,
+        name: normalizeName(' :CAT_2-NYA: '),
+        url: 'https://example.com/猫.png',
+        category: '日本語のカテゴリー',
+      }),
+    ).toMatchObject({ name: 'cat_2-nya', category: '日本語のカテゴリー' });
+  });
   it('rejects control characters and malformed percent escapes accepted by browser URL parsing', () => {
     expect(() => validateEmoji({ ...cat, category: 'a\u0085b' })).toThrow();
     expect(() =>

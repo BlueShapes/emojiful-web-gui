@@ -14,6 +14,17 @@ const cat = {
 };
 
 describe('table bulk input', () => {
+  it('marks Japanese names as errors instead of length-only warnings', () => {
+    const rows = [{ ...cat, name: '日本語を含む長い絵文字名です' }];
+    const issues = getBulkTableIssues(rows, 'Custom');
+    expect(issues[0]).toEqual([
+      {
+        field: 'name',
+        error: expect.objectContaining({ key: 'error.emojiName' }),
+      },
+    ]);
+    expect(() => importBulkTable(rows, 'Custom')).toThrow();
+  });
   it('flags names at the configurable length threshold without blocking valid imports', () => {
     const rows = [
       { ...cat, name: 'a'.repeat(11) },

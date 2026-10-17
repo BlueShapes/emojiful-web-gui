@@ -200,7 +200,7 @@ describe('name replacement preview', () => {
     expect(preview.problems).toEqual([]);
   });
 
-  it('leaves unchanged invalid names alone', () => {
+  it('reports unchanged invalid names without rewriting them', () => {
     const preview = previewNameReplacement({
       names: ['Bad Name', 'good'],
       search: 'missing',
@@ -210,7 +210,7 @@ describe('name replacement preview', () => {
 
     expect(preview.names).toEqual(['Bad Name', 'good']);
     expect(preview.changes).toEqual([]);
-    expect(preview.problems).toEqual([]);
+    expect(preview.problems).toEqual([{ index: 0, kind: 'invalid' }]);
   });
 
   it('does not mutate request arrays or names', () => {
