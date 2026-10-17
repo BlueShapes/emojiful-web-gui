@@ -8,7 +8,7 @@ import { appendEntries, emptyPack, MAX_EMOJIS } from '../../web/src/lib/pack';
 
 const blank = () => ({ name: '', url: '', category: '' });
 const cat = {
-  name: 'cat',
+  name: 'custom_cat',
   url: 'https://example.com/cat.png',
   category: 'Animals',
 };
@@ -88,6 +88,18 @@ describe('table bulk input', () => {
     expect(issues[2]).toEqual([]);
   });
 
+  it('marks built-in names as registration errors in the table and blocks import', () => {
+    const rows = [{ ...cat, name: 'smile' }];
+
+    expect(getBulkTableIssues(rows, 'Custom')[0]).toEqual([
+      {
+        field: 'name',
+        error: expect.objectContaining({ key: 'error.builtinEmoji' }),
+      },
+    ]);
+    expect(() => importBulkTable(rows, 'Custom')).toThrow();
+  });
+
   it('uses the default category and maps the first validation error to its field', () => {
     const rows = [
       { ...cat, name: 'invalid name' },
@@ -142,13 +154,13 @@ describe('table bulk input', () => {
     const rows = [
       blank(),
       { name: ' :HAPPY_CAT: ', url: cat.url, category: '  ' },
-      { ...cat, name: 'dog', category: ' Pets, friends ' },
+      { ...cat, name: 'custom_dog', category: ' Pets, friends ' },
       { name: ' ', url: ' ', category: ' ' },
     ];
     const original = structuredClone(rows);
     expect(importBulkTable(rows, ' Custom ')).toEqual([
       { ...cat, name: 'happy_cat', category: 'Custom' },
-      { ...cat, name: 'dog', category: 'Pets, friends' },
+      { ...cat, name: 'custom_dog', category: 'Pets, friends' },
     ]);
     expect(rows).toEqual(original);
   });
@@ -173,13 +185,19 @@ describe('table bulk input', () => {
 
   it('rejects normalized duplicates with the original row number', () => {
     expect(() =>
-      importBulkTable([cat, blank(), { ...cat, name: ':CAT:' }], 'Custom'),
+      importBulkTable(
+        [cat, blank(), { ...cat, name: ':CUSTOM_CAT:' }],
+        'Custom',
+      ),
     ).toThrow('3件目');
   });
 
   it('retains all-or-nothing validation against the existing collection', () => {
     const pack = { ...emptyPack(), emojis: [cat] };
-    const entries = importBulkTable([{ ...cat, name: 'dog' }, cat], 'Custom');
+    const entries = importBulkTable(
+      [{ ...cat, name: 'custom_dog' }, cat],
+      'Custom',
+    );
     expect(() => appendEntries(pack, entries)).toThrow('重複');
     expect(pack.emojis).toEqual([cat]);
   });

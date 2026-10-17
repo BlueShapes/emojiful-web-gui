@@ -103,7 +103,7 @@ describe('all-or-nothing bulk import', () => {
   it('accepts reordered CSV headers, quotes and category fallback', () => {
     expect(
       importBulk(
-        'url,category,name\nhttps://example.com/cat.png,"Animals, pets",:happy_cat:\nhttps://example.com/dog.gif,,dog',
+        'url,category,name\nhttps://example.com/cat.png,"Animals, pets",:happy_cat:\nhttps://example.com/dog.gif,,custom_dog',
         'Custom',
       ),
     ).toEqual([
@@ -112,13 +112,17 @@ describe('all-or-nothing bulk import', () => {
         url: 'https://example.com/cat.png',
         category: 'Animals, pets',
       },
-      { name: 'dog', url: 'https://example.com/dog.gif', category: 'Custom' },
+      {
+        name: 'custom_dog',
+        url: 'https://example.com/dog.gif',
+        category: 'Custom',
+      },
     ]);
   });
   it('accepts TSV and URL-first rows without a header', () => {
     expect(
       importBulk(
-        'https://example.com/cat.png\tcat\tAnimals\nhttps://example.com/dog.png\tdog',
+        'https://example.com/cat.png\tcustom_cat\tAnimals\nhttps://example.com/dog.png\tcustom_dog',
         'Custom',
       ),
     ).toHaveLength(2);
@@ -126,10 +130,10 @@ describe('all-or-nothing bulk import', () => {
   it('derives URL list names from filenames and supports query strings', () => {
     expect(
       importBulk(
-        'https://example.com/Happy%20Cat.png?x=1\nhttps://example.com/wave.gif',
+        'https://example.com/Happy%20Cat.png?x=1\nhttps://example.com/custom_wave.gif',
         'Custom',
       ).map((entry) => entry.name),
-    ).toEqual(['happy_cat', 'wave']);
+    ).toEqual(['happy_cat', 'custom_wave']);
   });
   it('accepts JSON arrays and draft documents', () => {
     expect(importBulk(JSON.stringify([cat]), 'Custom')).toEqual([cat]);
@@ -138,19 +142,74 @@ describe('all-or-nothing bulk import', () => {
   it('rejects duplicate names, malformed quoting, and invalid rows instead of skipping them', () => {
     expect(() =>
       importBulk(
-        'cat,https://example.com/cat.png\ncat,https://example.com/cat2.png',
+        'custom_cat,https://example.com/cat.png\ncustom_cat,https://example.com/cat2.png',
         'Custom',
       ),
     ).toThrow('重複');
     expect(() => importBulk('"unclosed,url', 'Custom')).toThrow('構文');
     expect(() =>
-      importBulk('cat,https://example.com/cat.png\nbad,not-a-url', 'Custom'),
+      importBulk('custom_cat,https://example.com/cat.png\nbad,not-a-url', 'Custom'),
     ).toThrow('2件目');
     expect(() => importBulk('name,url,category', 'Custom')).toThrow('1〜2000');
   });
   it('rejects collisions with existing names without mutating the draft', () => {
     expect(() => appendEntries(pack, [cat])).toThrow('重複');
     expect(pack.emojis).toEqual([cat]);
+  });
+
+  it.each([
+    'smile',
+    'cat',
+    'satisfied',
+    'swear',
+    'thonk',
+    'blobcat',
+    'monka',
+    'comfy',
+    'kappa',
+  ])('rejects the built-in name %s when importing or exporting', (name) => {
+    const emoji = { ...cat, name };
+    expect(() => importBulk(JSON.stringify([emoji]), 'Custom')).toThrow();
+    expect(() => exportPack({ ...pack, emojis: [emoji] })).toThrow();
+  });
+
+  it('allows custom names and distinguishes built-in underscore aliases from hyphens', () => {
+    const emojis = [
+      { ...cat, name: 'my_smile' },
+      { ...cat, name: 'face-with-symbols-on-mouth' },
+    ];
+
+    expect(exportPack({ ...pack, emojis })).toBeInstanceOf(Uint8Array);
+    expect(importBulk(JSON.stringify(emojis), 'Custom')).toEqual(emojis);
+  });
+
+  it('keeps built-in names loadable in drafts but rejects them from exports', () => {
+    const builtin = { ...cat, name: 'smile' };
+    const draft = { ...emptyPack(), emojis: [builtin] };
+
+    expect(validatePack(draft).emojis).toEqual([builtin]);
+    expect(validateDraft(draft).emojis).toEqual([builtin]);
+    expect(() => exportPack(draft)).toThrow();
+    expect(
+      importPackZip(
+        zipSync({
+          'data/sample/recipes/smile.json': strToU8(
+            JSON.stringify({ type: 'emojiful:emoji_recipe', ...builtin }),
+          ),
+        }),
+      ).emojis,
+    ).toEqual([builtin]);
+  });
+
+  it('validates only new entries when appending to a draft with existing built-in names', () => {
+    const draft = { ...emptyPack(), emojis: [{ ...cat, name: 'smile' }] };
+    const appended = { ...cat, name: 'custom_wave' };
+
+    expect(appendEntries(draft, [appended]).emojis).toEqual([
+      { ...cat, name: 'smile' },
+      appended,
+    ]);
+    expect(() => appendEntries(emptyPack(), [{ ...cat, name: 'smile' }])).toThrow();
   });
 });
 

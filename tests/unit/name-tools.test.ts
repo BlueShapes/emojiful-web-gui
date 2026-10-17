@@ -189,13 +189,13 @@ describe('name replacement preview', () => {
     const preview = previewNameReplacement({
       names: ['', ':OLD:', ':Keep:'],
       search: 'OLD',
-      replacement: 'New',
+      replacement: 'custom_new',
       mode: 'literal',
     });
 
-    expect(preview.names).toEqual(['', 'new', ':Keep:']);
+    expect(preview.names).toEqual(['', 'custom_new', ':Keep:']);
     expect(preview.changes).toEqual([
-      { index: 1, before: ':OLD:', after: 'new' },
+      { index: 1, before: ':OLD:', after: 'custom_new' },
     ]);
     expect(preview.problems).toEqual([]);
   });
@@ -213,13 +213,27 @@ describe('name replacement preview', () => {
     expect(preview.problems).toEqual([{ index: 0, kind: 'invalid' }]);
   });
 
+  it('flags built-in names among all participants, including unchanged rows', () => {
+    const preview = previewNameReplacement({
+      names: ['smile', 'custom_smile'],
+      search: 'custom_',
+      replacement: '',
+      mode: 'literal',
+    });
+
+    expect(preview.problems.filter(({ kind }) => kind === 'builtin')).toEqual([
+      { index: 0, kind: 'builtin' },
+      { index: 1, kind: 'builtin' },
+    ]);
+  });
+
   it('does not mutate request arrays or names', () => {
     const names = ['old', ':UNCHANGED:'];
     const existingNames = ['taken'];
     const request = {
       names,
       search: 'old',
-      replacement: 'new',
+      replacement: 'custom_new',
       mode: 'literal' as const,
       existingNames,
     };

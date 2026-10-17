@@ -68,20 +68,22 @@ describe('all supported translations', () => {
     let error: unknown;
     try {
       importBulk(
-        'cat,https://example.com/cat.png\ncat,https://example.com/other.png',
+        'custom_cat,https://example.com/cat.png\ncustom_cat,https://example.com/other.png',
         'Custom',
       );
     } catch (caught) {
       error = caught;
     }
     expect(errorMessage(error, 'en')).toBe(
-      'Entry 2: duplicate emoji name “cat”.',
+      'Entry 2: duplicate emoji name “custom_cat”.',
     );
-    expect(errorMessage(error, 'ja')).toContain('2件目: 絵文字名「cat」が重複');
-    expect(errorMessage(error, 'de')).toContain('cat');
+    expect(errorMessage(error, 'ja')).toContain(
+      '2件目: 絵文字名「custom_cat」が重複',
+    );
+    expect(errorMessage(error, 'de')).toContain('custom_cat');
     let nested: unknown;
     try {
-      importBulk('[{"name":"cat","url":null}]', 'Custom');
+      importBulk('[{"name":"custom_cat","url":null}]', 'Custom');
     } catch (caught) {
       nested = caught;
     }
@@ -99,6 +101,37 @@ describe('all supported translations', () => {
 
 describe('localized backend errors', () => {
   afterEach(() => vi.unstubAllGlobals());
+  it('blocks built-in emoji names before sending an install request', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(new Response('{}', { status: 200 }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(
+      installPack(
+        {
+          mode: 'mod',
+          token: 'a'.repeat(64),
+          gameVersion: '1.20.1',
+          loader: 'Forge',
+          port: 8765,
+        },
+        {
+          ...emptyPack(),
+          emojis: [
+            {
+              name: 'smile',
+              url: 'https://example.com/smile.png',
+              category: 'Custom',
+            },
+          ],
+        },
+        false,
+      ),
+    ).rejects.toMatchObject({ key: 'error.builtinEmoji' });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it('translates conflicts without showing raw backend text', async () => {
     vi.stubGlobal(
       'fetch',
@@ -118,7 +151,16 @@ describe('localized backend errors', () => {
           loader: 'Forge',
           port: 8765,
         },
-        emptyPack(),
+        {
+          ...emptyPack(),
+          emojis: [
+            {
+              name: 'custom_smile',
+              url: 'https://example.com/smile.png',
+              category: 'Custom',
+            },
+          ],
+        },
         false,
       );
     } catch (caught) {
@@ -142,7 +184,16 @@ describe('localized backend errors', () => {
           loader: 'Forge',
           port: 8765,
         },
-        emptyPack(),
+        {
+          ...emptyPack(),
+          emojis: [
+            {
+              name: 'custom_smile',
+              url: 'https://example.com/smile.png',
+              category: 'Custom',
+            },
+          ],
+        },
         false,
       );
     } catch (caught) {
