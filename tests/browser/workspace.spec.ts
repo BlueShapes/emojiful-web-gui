@@ -54,15 +54,15 @@ test('legacy draft, multiple packs and collapsed sidebar survive reloads and lan
   await page.getByRole('button', { name: ja.bulkInput, exact: true }).click();
   await page
     .getByLabel(ja['bulk.data'])
-    .fill('cat,https://example.com/cat.png,動物');
+    .fill('my_cat,https://example.com/my_cat.png,動物');
   await page.getByRole('button', { name: ja['bulk.add'], exact: true }).click();
   await selector.selectOption(firstKey);
   await expect(page.getByText(':wave:', { exact: true })).toBeVisible();
-  await expect(page.getByText(':cat:', { exact: true })).toHaveCount(0);
+  await expect(page.getByText(':my_cat:', { exact: true })).toHaveCount(0);
   await page.getByLabel(ja.search).fill('wave');
   await selector.selectOption(secondKey);
   await expect(page.getByLabel(ja.search)).toHaveValue('');
-  await expect(page.getByText(':cat:', { exact: true })).toBeVisible();
+  await expect(page.getByText(':my_cat:', { exact: true })).toBeVisible();
   await page
     .getByRole('button', { name: 'サイドバーを折りたたむ', exact: true })
     .click();
@@ -268,7 +268,7 @@ test('MOD deployment and ZIP export use the selected pack while sidebar is close
   await page.getByRole('button', { name: ja.bulkInput, exact: true }).click();
   await page
     .getByLabel(ja['bulk.data'])
-    .fill('wave,https://example.com/wave.png,反応');
+    .fill('my_wave,https://example.com/my_wave.png,反応');
   await page.getByRole('button', { name: ja['bulk.add'], exact: true }).click();
   await page.getByRole('button', { name: ja.newPack, exact: true }).click();
   const secondKey = await selector.inputValue();
@@ -276,7 +276,7 @@ test('MOD deployment and ZIP export use the selected pack while sidebar is close
   await page.getByRole('button', { name: ja.bulkInput, exact: true }).click();
   await page
     .getByLabel(ja['bulk.data'])
-    .fill('cat,https://example.com/cat.png,動物');
+    .fill('my_cat,https://example.com/my_cat.png,動物');
   await page.getByRole('button', { name: ja['bulk.add'], exact: true }).click();
   await page
     .getByRole('button', { name: 'サイドバーを折りたたむ', exact: true })
@@ -293,8 +293,8 @@ test('MOD deployment and ZIP export use the selected pack while sidebar is close
       names: body.pack.emojis.map((emoji) => emoji.name),
     })),
   ).toEqual([
-    { id: 'alpha', names: ['wave'] },
-    { id: 'beta', names: ['cat'] },
+    { id: 'alpha', names: ['my_wave'] },
+    { id: 'beta', names: ['my_cat'] },
   ]);
   const download = page.waitForEvent('download');
   await page

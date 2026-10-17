@@ -3,8 +3,8 @@ import {
   emptyPack,
   MAX_EMOJIS,
   normalizeName,
-  validateEmoji,
-  validatePack,
+  validateRegistrationEmoji,
+  validateRegistrationPack,
 } from './pack';
 import type { EmojiEntry } from './pack';
 import {
@@ -21,6 +21,7 @@ export interface BulkTableIssue {
 function fieldForError(error: LocalizedError): keyof EmojiEntry {
   switch (error.key) {
     case 'error.emojiName':
+    case 'error.builtinEmoji':
       return 'name';
     case 'error.urlFull':
     case 'error.urlSafe':
@@ -94,7 +95,7 @@ export function getBulkTableIssues(
   for (const { row, index } of participatingRows) {
     let invalidName = false;
     try {
-      validateEmoji({
+      validateRegistrationEmoji({
         name: normalizeName(row.name),
         url: row.url,
         category: row.category.trim() || defaultCategory,
@@ -138,7 +139,7 @@ export function importBulkTable(
     if (!row.name.trim() && !row.url.trim() && !row.category.trim()) return;
     let entry: EmojiEntry;
     try {
-      entry = validateEmoji({
+      entry = validateRegistrationEmoji({
         name: normalizeName(row.name),
         url: row.url,
         category: row.category.trim() || defaultCategory,
@@ -162,5 +163,5 @@ export function importBulkTable(
     entries.push(entry);
   });
   if (!entries.length) throw new LocalizedError('error.inputEmpty');
-  return validatePack({ ...emptyPack(), emojis: entries }).emojis;
+  return validateRegistrationPack({ ...emptyPack(), emojis: entries }).emojis;
 }

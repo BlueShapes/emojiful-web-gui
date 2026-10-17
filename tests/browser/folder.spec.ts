@@ -30,10 +30,10 @@ const files = {
     description: 'Folder',
     emojis: [],
   }),
-  'data/folder_pack/recipes/nested/wave.json': JSON.stringify({
+  'data/folder_pack/recipes/nested/my_wave.json': JSON.stringify({
     type: 'emojiful:emoji_recipe',
-    name: 'wave',
-    url: 'https://example.com/wave.png',
+    name: 'my_wave',
+    url: 'https://example.com/my_wave.png',
     category: '反応',
     conditions: [{ type: 'example:condition' }],
   }),
@@ -114,7 +114,7 @@ test('opens a native folder and directly updates, adds and removes only emoji fi
   await expect(
     page.getByLabel(ja['field.packName'], { exact: true }),
   ).toHaveValue('フォルダーパック');
-  await expect(page.getByText(':wave:', { exact: true })).toBeVisible();
+  await expect(page.getByText(':my_wave:', { exact: true })).toBeVisible();
   await expect(
     page
       .getByRole('combobox', { name: ja['packs.switch'], exact: true })
@@ -122,7 +122,7 @@ test('opens a native folder and directly updates, adds and removes only emoji fi
   ).toHaveCount(2);
   await page
     .getByRole('button', {
-      name: ja['editNamed'].replace('{name}', 'wave'),
+      name: ja['editNamed'].replace('{name}', 'my_wave'),
       exact: true,
     })
     .click();
@@ -136,7 +136,7 @@ test('opens a native folder and directly updates, adds and removes only emoji fi
   await page.getByRole('button', { name: ja.bulkInput, exact: true }).click();
   await page
     .getByLabel(ja['bulk.data'])
-    .fill('cat,https://example.com/cat.png,動物');
+    .fill('my_cat,https://example.com/my_cat.png,動物');
   await page.getByRole('button', { name: ja['bulk.add'], exact: true }).click();
   await page
     .getByRole('button', { name: ja['folder.save'], exact: true })
@@ -146,16 +146,16 @@ test('opens a native folder and directly updates, adds and removes only emoji fi
   );
   expect(
     JSON.parse(
-      (await diskFile(page, 'data/folder_pack/recipes/nested/wave.json'))!,
+      (await diskFile(page, 'data/folder_pack/recipes/nested/my_wave.json'))!,
     ),
   ).toMatchObject({
     url: 'https://example.com/updated.png',
     conditions: [{ type: 'example:condition' }],
   });
   expect(
-    JSON.parse((await diskFile(page, 'data/folder_pack/recipes/cat.json'))!)
+    JSON.parse((await diskFile(page, 'data/folder_pack/recipes/my_cat.json'))!)
       .name,
-  ).toBe('cat');
+  ).toBe('my_cat');
   expect(await diskFile(page, 'notes.txt')).toBe(files['notes.txt']);
   expect(await diskFile(page, 'data/folder_pack/recipes/crafting.json')).toBe(
     files['data/folder_pack/recipes/crafting.json'],
@@ -164,7 +164,7 @@ test('opens a native folder and directly updates, adds and removes only emoji fi
     page.getByText(ja['folder.upToDate'], { exact: true }),
   ).toBeVisible();
   await page.screenshot({ path: '.work/folder-editor.png', fullPage: true });
-  for (const name of ['wave', 'cat']) {
+  for (const name of ['my_wave', 'my_cat']) {
     await page
       .getByRole('button', {
         name: ja['deleteNamed'].replace('{name}', name),
@@ -184,9 +184,9 @@ test('opens a native folder and directly updates, adds and removes only emoji fi
   await expect(
     page.getByText(ja['folder.upToDate'], { exact: true }),
   ).toBeVisible();
-  expect(await diskFile(page, 'data/folder_pack/recipes/cat.json')).toBe(null);
+  expect(await diskFile(page, 'data/folder_pack/recipes/my_cat.json')).toBe(null);
   expect(
-    await diskFile(page, 'data/folder_pack/recipes/nested/wave.json'),
+    await diskFile(page, 'data/folder_pack/recipes/nested/my_wave.json'),
   ).toBe(null);
   expect(await diskFile(page, 'notes.txt')).toBe(files['notes.txt']);
 });
@@ -329,7 +329,7 @@ test('fallback folder selection imports read-only and retains ZIP export', async
   await page
     .getByLabel(ja['folder.input'], { exact: true })
     .setInputFiles(directory);
-  await expect(page.getByText(':wave:', { exact: true })).toBeVisible();
+  await expect(page.getByText(':my_wave:', { exact: true })).toBeVisible();
   await expect(
     page.getByText(ja['folder.readOnly'], { exact: true }),
   ).toBeVisible();

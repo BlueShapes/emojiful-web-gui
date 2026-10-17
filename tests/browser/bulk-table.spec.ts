@@ -18,23 +18,23 @@ test('table rows can be edited and removed, retain drafts across modes and persi
   const mode = page.getByLabel(ja['bulk.mode'], { exact: true });
   await page
     .getByLabel(ja['bulk.data'])
-    .fill('wave,https://example.com/wave.png');
+    .fill('my_wave,https://example.com/my_wave.png');
   await mode.selectOption('table');
   const rows = page.locator('.bulk-table tbody tr');
   await expect(rows).toHaveCount(3);
   await page.getByLabel(ja['bulk.defaultCategory']).fill('Pets');
-  await rows.nth(0).getByRole('textbox').nth(0).fill(':CAT:');
+  await rows.nth(0).getByRole('textbox').nth(0).fill(':MY_CAT:');
   await rows
     .nth(0)
     .getByRole('textbox')
     .nth(1)
-    .fill('https://example.com/cat.png');
-  await rows.nth(2).getByRole('textbox').nth(0).fill('dog');
+    .fill('https://example.com/my_cat.png');
+  await rows.nth(2).getByRole('textbox').nth(0).fill('my_dog');
   await rows
     .nth(2)
     .getByRole('textbox')
     .nth(1)
-    .fill('https://example.com/dog.png');
+    .fill('https://example.com/my_dog.png');
   await rows.nth(2).getByRole('textbox').nth(2).fill('Animals');
   await page
     .getByRole('button', { name: ja['bulk.addRow'], exact: true })
@@ -42,20 +42,20 @@ test('table rows can be edited and removed, retain drafts across modes and persi
   await expect(rows).toHaveCount(4);
   await rows.nth(1).getByRole('button').click();
   await expect(rows).toHaveCount(3);
-  await expect(rows.nth(1).getByRole('textbox').nth(0)).toHaveValue('dog');
+  await expect(rows.nth(1).getByRole('textbox').nth(0)).toHaveValue('my_dog');
   await mode.selectOption('text');
   await expect(page.getByLabel(ja['bulk.data'])).toHaveValue(
-    'wave,https://example.com/wave.png',
+    'my_wave,https://example.com/my_wave.png',
   );
   await mode.selectOption('table');
-  await expect(rows.nth(0).getByRole('textbox').nth(0)).toHaveValue(':CAT:');
+  await expect(rows.nth(0).getByRole('textbox').nth(0)).toHaveValue(':MY_CAT:');
   await page.screenshot({
     path: '.work/bulk-table-desktop.png',
     fullPage: true,
   });
   await page.getByRole('button', { name: ja['bulk.add'], exact: true }).click();
   await expect(page.locator('.emoji-card')).toHaveCount(2);
-  await expect(page.getByText(':cat:', { exact: true })).toBeVisible();
+  await expect(page.getByText(':my_cat:', { exact: true })).toBeVisible();
   await page.reload();
   await expect(page.locator('.emoji-card')).toHaveCount(2);
   const saved = await page.evaluate(() =>
@@ -78,28 +78,28 @@ test('table validation keeps every row and rejects partial imports and existing 
     .click();
   await page
     .getByLabel(ja['bulk.data'])
-    .fill('cat,https://example.com/cat.png');
+    .fill('my_cat,https://example.com/my_cat.png');
   await page.getByRole('button', { name: ja['bulk.add'], exact: true }).click();
   await page
     .getByRole('button', { name: ja['bulkInput'], exact: true })
     .click();
   await page.getByLabel(ja['bulk.mode']).selectOption('table');
   const rows = page.locator('.bulk-table tbody tr');
-  await rows.nth(0).getByRole('textbox').nth(0).fill('dog');
+  await rows.nth(0).getByRole('textbox').nth(0).fill('my_dog');
   await rows
     .nth(0)
     .getByRole('textbox')
     .nth(1)
-    .fill('https://example.com/dog.png');
-  await rows.nth(2).getByRole('textbox').nth(0).fill('cat');
+    .fill('https://example.com/my_dog.png');
+  await rows.nth(2).getByRole('textbox').nth(0).fill('my_cat');
   await page.getByRole('button', { name: ja['bulk.add'], exact: true }).click();
   await expect(page.getByRole('alert')).toContainText('3件目');
-  await expect(rows.nth(0).getByRole('textbox').nth(0)).toHaveValue('dog');
+  await expect(rows.nth(0).getByRole('textbox').nth(0)).toHaveValue('my_dog');
   await rows
     .nth(2)
     .getByRole('textbox')
     .nth(1)
-    .fill('https://example.com/second-cat.png');
+    .fill('https://example.com/second-my_cat.png');
   await page.getByRole('button', { name: ja['bulk.add'], exact: true }).click();
   await expect(page.getByRole('alert')).toContainText('重複');
   await page.getByRole('button', { name: ja['closeEditor'] }).click();

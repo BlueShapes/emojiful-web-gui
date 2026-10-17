@@ -1,4 +1,5 @@
 import { MAX_EMOJIS, normalizeName, validateEmojiName } from './pack';
+import { isBuiltinEmojiName } from './builtin-emojis';
 
 export const DEFAULT_NAME_WARNING_LENGTH = 12;
 
@@ -26,7 +27,11 @@ export interface NameReplacementRequest {
   existingNames?: readonly string[];
 }
 
-export type NameReplacementProblemKind = 'invalid' | 'duplicate' | 'existing';
+export type NameReplacementProblemKind =
+  | 'invalid'
+  | 'builtin'
+  | 'duplicate'
+  | 'existing';
 
 export interface NameReplacementPreview {
   names: string[];
@@ -115,6 +120,7 @@ export function previewNameReplacement(
     } catch {
       problemsByIndex[index].add('invalid');
     }
+    if (isBuiltinEmojiName(normalized)) problemsByIndex[index].add('builtin');
     if (!normalized) continue;
     const rows = participants.get(normalized) ?? [];
     rows.push(index);
@@ -141,6 +147,7 @@ export function previewNameReplacement(
 
   const problemOrder: NameReplacementProblemKind[] = [
     'invalid',
+    'builtin',
     'duplicate',
     'existing',
   ];

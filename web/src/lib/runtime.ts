@@ -1,3 +1,4 @@
+import { validateRegistrationPack } from './pack';
 import type { EmojiPack } from './pack';
 import { LocalizedError } from '../i18n';
 import type { MessageKey } from '../i18n';
@@ -77,12 +78,14 @@ export const listInstalled = (runtime: Runtime) =>
   api<{ packs: InstalledPack[] }>(runtime, '');
 export const loadInstalled = (runtime: Runtime, id: string) =>
   api<EmojiPack>(runtime, `/${encodeURIComponent(id)}`);
-export const installPack = (
+export const installPack = async (
   runtime: Runtime,
   pack: EmojiPack,
   overwrite: boolean,
-) =>
-  api<{ filename: string; message: string }>(runtime, '', {
+) => {
+  const validPack = validateRegistrationPack(pack);
+  return api<{ filename: string; message: string }>(runtime, '', {
     method: 'POST',
-    body: JSON.stringify({ pack, overwrite }),
+    body: JSON.stringify({ pack: validPack, overwrite }),
   });
+};

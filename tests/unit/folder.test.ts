@@ -7,7 +7,10 @@ import {
   ensureDirectoryWritePermission,
 } from '../../web/src/lib/folder';
 
-const recipe = (name = 'wave', url = 'https://example.com/wave.png') =>
+const recipe = (
+  name = 'custom_wave',
+  url = 'https://example.com/custom_wave.png',
+) =>
   JSON.stringify({
     type: 'emojiful:emoji_recipe',
     name,
@@ -29,7 +32,11 @@ const packData = () => ({
   name: 'Sample',
   description: 'Original',
   emojis: [
-    { name: 'wave', url: 'https://example.com/old.png', category: 'Old' },
+    {
+      name: 'custom_wave',
+      url: 'https://example.com/old.png',
+      category: 'Old',
+    },
   ],
 });
 
@@ -154,12 +161,12 @@ describe('folder pack editing', () => {
     expect(result.pack.name).toBe('Sample');
     expect(result.pack.emojis).toEqual([
       {
-        name: 'wave',
-        url: 'https://example.com/wave.png',
+        name: 'custom_wave',
+        url: 'https://example.com/custom_wave.png',
         category: 'Reactions',
       },
     ]);
-    expect(result.source.recipePaths.wave).toBe(
+    expect(result.source.recipePaths.custom_wave).toBe(
       'data/sample/recipes/nested/original.json',
     );
     expect(result.source.files).not.toHaveProperty('notes.txt');
@@ -169,12 +176,30 @@ describe('folder pack editing', () => {
     const result = await readDirectoryPack(
       new MemoryDirectory({
         'pack.mcmeta': metadata,
-        'data/my.namespace/recipes/nested/wave.json': recipe(),
+        'data/my.namespace/recipes/nested/wave.json': recipe('wave'),
       }),
     );
     expect(result.pack.id).toBe('my_namespace');
     expect(result.pack.description).toBe('Original');
     expect(result.pack.emojis[0].name).toBe('wave');
+  });
+
+  it('loads built-in recipes but rejects saving them before changing files', async () => {
+    const directory = new MemoryDirectory({
+      'pack.mcmeta': metadata,
+      'data/sample/recipes/smile.json': recipe('smile'),
+    });
+    const { pack, source } = await readDirectoryPack(directory);
+    const before = new Map(directory.files);
+
+    expect(pack.emojis.map((emoji) => emoji.name)).toEqual(['smile']);
+    await expect(saveDirectoryPack(source, pack)).rejects.toMatchObject({
+      key: 'error.entry',
+      args: {
+        detail: expect.objectContaining({ key: 'error.builtinEmoji' }),
+      },
+    });
+    expect(directory.files).toEqual(before);
   });
 
   it('reads UTF-8 BOM files while retaining their exact original contents for conflict checks', async () => {
@@ -183,7 +208,7 @@ describe('folder pack editing', () => {
       'data/sample/recipes/wave.json': '\uFEFF' + recipe(),
     });
     const { pack, source } = await readDirectoryPack(directory);
-    expect(pack.emojis[0].name).toBe('wave');
+    expect(pack.emojis[0].name).toBe('custom_wave');
     expect(source.files['pack.mcmeta']).toBe('\uFEFF' + metadata);
     await expect(saveDirectoryPack(source, pack)).resolves.toBeDefined();
   });
@@ -191,7 +216,7 @@ describe('folder pack editing', () => {
   it('reads a folder file list with the selected root stripped', async () => {
     const files = [
       ['Sample/pack.mcmeta', metadata],
-      ['Sample/data/sample/recipes/wave.json', recipe()],
+      ['Sample/data/sample/recipes/wave.json', recipe('wave')],
     ].map(([path, text]) =>
       Object.defineProperty(
         new File([text], path.split('/').at(-1)!),
@@ -217,7 +242,7 @@ describe('folder pack editing', () => {
   it('ignores binary icons and large unrelated assets in fallback folder imports', async () => {
     const selected = [
       ['Sample/pack.mcmeta', metadata],
-      ['Sample/data/sample/recipes/wave.json', recipe()],
+      ['Sample/data/sample/recipes/wave.json', recipe('wave')],
       ['Sample/pack.png', new Uint8Array([137, 80, 78, 71, 255])],
       ['Sample/assets/large.bin', new Uint8Array(9 * 1024 * 1024)],
     ].map(([path, contents]) =>
@@ -291,17 +316,25 @@ describe('folder pack editing', () => {
     const directory = folder();
     const { pack, source } = await readDirectoryPack(directory);
     pack.emojis = [
-      { name: 'cat', url: 'https://example.com/cat.png', category: 'Animals' },
+      {
+        name: 'custom_cat',
+        url: 'https://example.com/custom_cat.png',
+        category: 'Animals',
+      },
     ];
     const saved = await saveDirectoryPack(source, pack);
     expect(
       directory.files.has('data/sample/recipes/nested/original.json'),
     ).toBe(false);
     expect(
-      JSON.parse(directory.files.get('data/sample/recipes/cat.json')!).name,
-    ).toBe('cat');
+      JSON.parse(
+        directory.files.get('data/sample/recipes/custom_cat.json')!,
+      ).name,
+    ).toBe('custom_cat');
     await saveDirectoryPack(saved, { ...pack, emojis: [] });
-    expect(directory.files.has('data/sample/recipes/cat.json')).toBe(false);
+    expect(directory.files.has('data/sample/recipes/custom_cat.json')).toBe(
+      false,
+    );
     expect(directory.files.has('data/sample/recipes/crafting.json')).toBe(true);
     expect((await readDirectoryPack(directory)).pack.emojis).toEqual([]);
   });
@@ -310,7 +343,9 @@ describe('folder pack editing', () => {
     const directory = folder();
     const { pack, source } = await readDirectoryPack(directory);
     await saveDirectoryPack(source, { ...pack, id: 'renamed' });
-    expect(directory.files.has('data/renamed/recipes/wave.json')).toBe(true);
+    expect(directory.files.has('data/renamed/recipes/custom_wave.json')).toBe(
+      true,
+    );
     expect(
       directory.files.has('data/sample/recipes/nested/original.json'),
     ).toBe(false);
@@ -320,14 +355,16 @@ describe('folder pack editing', () => {
   it('renames an emoji into its old filename without deleting the new output', async () => {
     const directory = new MemoryDirectory({
       'pack.mcmeta': metadata,
-      'data/sample/recipes/cat.json': recipe('wave'),
+      'data/sample/recipes/custom_cat.json': recipe('custom_wave'),
     });
     const { pack, source } = await readDirectoryPack(directory);
-    pack.emojis[0].name = 'cat';
+    pack.emojis[0].name = 'custom_cat';
     const saved = await saveDirectoryPack(source, pack);
     expect(
-      JSON.parse(directory.files.get('data/sample/recipes/cat.json')!).name,
-    ).toBe('cat');
+      JSON.parse(
+        directory.files.get('data/sample/recipes/custom_cat.json')!,
+      ).name,
+    ).toBe('custom_cat');
     await expect(saveDirectoryPack(saved, pack)).resolves.toBeDefined();
   });
 
@@ -341,7 +378,7 @@ describe('folder pack editing', () => {
       'pack.mcmeta': JSON.stringify({
         pack: { pack_format: 15, description: rich },
       }),
-      'data/sample/recipes/wave.json': recipe(),
+      'data/sample/recipes/custom_wave.json': recipe(),
     });
     const { pack, source } = await readDirectoryPack(directory);
     pack.emojis[0].url = 'https://example.com/updated.png';
@@ -366,7 +403,7 @@ describe('folder pack editing', () => {
       if (change === 'modified')
         directory.files.set(
           'data/sample/recipes/nested/original.json',
-          recipe('wave', 'https://example.com/external.png'),
+          recipe('custom_wave', 'https://example.com/external.png'),
         );
       if (change === 'removed')
         directory.files.delete('data/sample/recipes/nested/original.json');
@@ -384,13 +421,13 @@ describe('folder pack editing', () => {
     const directory = folder();
     const { pack, source } = await readDirectoryPack(directory);
     directory.files.set(
-      'data/sample/recipes/cat.json',
+      'data/sample/recipes/custom_cat.json',
       JSON.stringify({ type: 'minecraft:crafting_shaped' }),
     );
     const before = new Map(directory.files);
     pack.emojis.push({
-      name: 'cat',
-      url: 'https://example.com/cat.png',
+      name: 'custom_cat',
+      url: 'https://example.com/custom_cat.png',
       category: 'Animals',
     });
     await expect(saveDirectoryPack(source, pack)).rejects.toMatchObject({
@@ -418,7 +455,11 @@ describe('folder pack editing', () => {
     const before = new Map(directory.files);
     const { pack, source } = await readDirectoryPack(directory);
     pack.emojis = [
-      { name: 'cat', url: 'https://example.com/cat.png', category: 'Animals' },
+      {
+        name: 'custom_cat',
+        url: 'https://example.com/custom_cat.png',
+        category: 'Animals',
+      },
     ];
     directory.failOnce.add('emojiful-web-gui.json');
     await expect(saveDirectoryPack(source, pack)).rejects.toMatchObject({
@@ -434,7 +475,10 @@ describe('folder pack editing', () => {
       const { pack, source } = await readDirectoryPack(directory);
       const path = 'data/sample/recipes/nested/original.json';
       const original = directory.files.get(path)!;
-      const external = recipe('wave', 'https://example.com/external.png');
+      const external = recipe(
+        'custom_wave',
+        'https://example.com/external.png',
+      );
       let rollingBack = false;
       directory.beforeClose = (currentPath, text) => {
         if (currentPath === 'emojiful-web-gui.json' && !rollingBack) {

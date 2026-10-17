@@ -18,7 +18,7 @@ const listing = (...responses: string[]) =>
 const validListing = listing(
   response(root, true),
   response(`${root}Happy%20Cat.PNG`),
-  response(`${root}wave.gif`),
+  response(`${root}my_wave.gif`),
   response(`${root}notes.txt`),
   response(`${root}nested/`, true),
 );
@@ -133,7 +133,7 @@ test('terminal listing becomes editable rows before an atomic pack addition', as
   );
   expect(savedUrls).toEqual([
     editedUrl,
-    `https://cloud.example${root}wave.gif`,
+    `https://cloud.example${root}my_wave.gif`,
   ]);
   await page.getByRole('button', { name: ja.bulkInput, exact: true }).click();
   await mode.selectOption('table');
@@ -204,8 +204,8 @@ test('XML files support duplicate-name repair and report empty image listings', 
       '\uFEFF' +
         listing(
           response(root, true),
-          response(`${root}cat.PNG`),
-          response(`${root}cat.gif`),
+          response(`${root}my_cat.PNG`),
+          response(`${root}my_cat.gif`),
         ),
     ),
   });
@@ -215,13 +215,13 @@ test('XML files support duplicate-name repair and report empty image listings', 
     .click();
   const nameInputs = page.locator('.bulk-table tbody tr');
   await expect(nameInputs.nth(0).getByRole('textbox').nth(0)).toHaveValue(
-    'cat_png',
+    'my_cat_png',
   );
   await expect(nameInputs.nth(1).getByRole('textbox').nth(0)).toHaveValue(
-    'cat_gif',
+    'my_cat_gif',
   );
-  await nameInputs.nth(0).getByRole('textbox').nth(0).fill('cat');
-  await nameInputs.nth(1).getByRole('textbox').nth(0).fill('cat');
+  await nameInputs.nth(0).getByRole('textbox').nth(0).fill('my_cat');
+  await nameInputs.nth(1).getByRole('textbox').nth(0).fill('my_cat');
   await page.getByRole('button', { name: ja['bulk.add'], exact: true }).click();
   await expect(page.getByRole('alert')).toContainText('重複');
   await page
@@ -229,7 +229,7 @@ test('XML files support duplicate-name repair and report empty image listings', 
     .nth(1)
     .getByRole('textbox')
     .nth(0)
-    .fill('cat_gif');
+    .fill('my_cat_gif');
   await page.getByRole('button', { name: ja['bulk.add'], exact: true }).click();
   await expect(page.locator('.emoji-card')).toHaveCount(2);
 });

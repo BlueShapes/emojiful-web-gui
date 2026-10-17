@@ -114,6 +114,7 @@ test('text and Nextcloud imports reject standard names, and replacement repairs 
 test('saved conflicting drafts survive reload, highlight errors and block ZIP until repaired', async ({
   page,
 }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
   await page.addInitScript(() => {
     if (!localStorage.getItem('emojiful.pack-studio.workspace.v1')) {
       localStorage.setItem(
@@ -123,11 +124,13 @@ test('saved conflicting drafts survive reload, highlight errors and block ZIP un
           id: 'existing',
           name: 'Existing',
           description: '',
-          emojis: ['smile', 'cat', 'my_custom'].map((name) => ({
-            name,
-            url: `https://example.com/${name}.png`,
-            category: 'Custom',
-          })),
+          emojis: ['smile', 'face_with_symbols_on_mouth', 'my_custom'].map(
+            (name) => ({
+              name,
+              url: `https://example.com/${name}.png`,
+              category: 'Custom',
+            }),
+          ),
         }),
       );
     }
@@ -135,6 +138,11 @@ test('saved conflicting drafts survive reload, highlight errors and block ZIP un
   await page.goto('/ja/');
   await expect(page.locator('.emoji-card')).toHaveCount(3);
   await expect(page.locator('.emoji-card-error')).toHaveCount(2);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
   await expect(page.locator('.emoji-name-error').first()).toContainText(
     'Emojiful',
   );
@@ -171,10 +179,12 @@ test('saved conflicting drafts survive reload, highlight errors and block ZIP un
   await page
     .getByLabel(ja['replace.mode'], { exact: true })
     .selectOption('regex');
-  await page.getByLabel(ja['replace.search'], { exact: true }).fill('^cat$');
+  await page
+    .getByLabel(ja['replace.search'], { exact: true })
+    .fill('^face_with_symbols_on_mouth$');
   await page
     .getByLabel(ja['replace.replacement'], { exact: true })
-    .fill('my_cat');
+    .fill('my_face');
   await page
     .getByRole('button', { name: ja['replace.preview'], exact: true })
     .click();
@@ -189,5 +199,5 @@ test('saved conflicting drafts survive reload, highlight errors and block ZIP un
   expect((await download).suggestedFilename()).toBe('existing.zip');
   await page.reload();
   await expect(page.getByText(':my_smile:', { exact: true })).toBeVisible();
-  await expect(page.getByText(':my_cat:', { exact: true })).toBeVisible();
+  await expect(page.getByText(':my_face:', { exact: true })).toBeVisible();
 });

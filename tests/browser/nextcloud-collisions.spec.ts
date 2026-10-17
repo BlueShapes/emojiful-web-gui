@@ -74,22 +74,22 @@ test('invalid fields and existing names are emphasized live and jump to the next
   await page.getByRole('button', { name: ja.bulkInput, exact: true }).click();
   await page
     .getByLabel(ja['bulk.data'])
-    .fill('cat,https://example.com/cat.png');
+    .fill('my_cat,https://example.com/my_cat.png');
   await page.getByRole('button', { name: ja['bulk.add'], exact: true }).click();
   await page.getByRole('button', { name: ja.bulkInput, exact: true }).click();
   await page.getByLabel(ja['bulk.mode'], { exact: true }).selectOption('table');
   const rows = page.locator('.bulk-table tbody tr');
   const cell = (row: number, column: number) =>
     rows.nth(row).getByRole('textbox').nth(column);
-  await cell(0, 0).fill(':CAT:');
-  await cell(0, 1).fill('https://example.com/cat2.png');
-  await cell(2, 0).fill('dog');
+  await cell(0, 0).fill(':MY_CAT:');
+  await cell(0, 1).fill('https://example.com/my_cat2.png');
+  await cell(2, 0).fill('my_dog');
   await cell(2, 1).fill('javascript:alert(1)');
   await expect(page.locator('.bulk-row-issue')).toHaveCount(2);
   await expect(cell(0, 0)).toHaveAttribute('aria-invalid', 'true');
   await expect(cell(2, 1)).toHaveAttribute('aria-invalid', 'true');
   await expect(rows.nth(0).locator('.bulk-cell-issue')).toHaveText(
-    ja['error.nameUsed'].replace('{name}', 'cat'),
+    ja['error.nameUsed'].replace('{name}', 'my_cat'),
   );
   await expect(rows.nth(1)).not.toHaveClass(/bulk-row-issue/);
   await page
@@ -105,7 +105,7 @@ test('invalid fields and existing names are emphasized live and jump to the next
     fullPage: true,
   });
   await cell(0, 0).fill('other_cat');
-  await cell(2, 1).fill('https://example.com/dog.png');
+  await cell(2, 1).fill('https://example.com/my_dog.png');
   await expect(page.locator('.bulk-row-issue')).toHaveCount(0);
   await expect(page.locator('.bulk-issue-summary')).toHaveCount(0);
   await page.getByRole('button', { name: ja['bulk.add'], exact: true }).click();
@@ -125,7 +125,7 @@ test('a new pack clears the previous Nextcloud folder prefix', async ({
     .fill('https://cloud.example/s/Share123');
   await page
     .getByLabel(ja['nextcloud.output'], { exact: true })
-    .fill(listing('cat.png'));
+    .fill(listing('my_cat.png'));
   await page
     .getByRole('button', { name: ja['nextcloud.review'], exact: true })
     .click();
@@ -155,12 +155,12 @@ test('issue highlighting and navigation fit mobile Japanese and Arabic tables', 
       .selectOption('table');
     const rows = page.locator('.bulk-table tbody tr');
     for (const index of [0, 2]) {
-      await rows.nth(index).getByRole('textbox').nth(0).fill('cat');
+      await rows.nth(index).getByRole('textbox').nth(0).fill('my_cat');
       await rows
         .nth(index)
         .getByRole('textbox')
         .nth(1)
-        .fill('https://example.com/cat.png');
+        .fill('https://example.com/my_cat.png');
     }
     await expect(page.locator('.bulk-row-issue')).toHaveCount(2);
     await page

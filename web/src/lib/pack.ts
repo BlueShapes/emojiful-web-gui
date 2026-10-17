@@ -2,6 +2,7 @@ import Papa from 'papaparse';
 import { strFromU8, strToU8, unzipSync, zipSync } from 'fflate';
 import { LocalizedError, localizedErrorMessage } from '../i18n';
 import type { Locale, MessageKey } from '../i18n';
+import { isBuiltinEmojiName } from './builtin-emojis';
 
 export const MAX_EMOJIS = 2000;
 export const MAX_IMPORT_BYTES = 4 * 1024 * 1024;
@@ -69,6 +70,13 @@ export function validateEmojiName(value: unknown): string {
   return name;
 }
 
+export function validateRegistrationName(value: unknown): string {
+  const name = validateEmojiName(value);
+  if (isBuiltinEmojiName(name))
+    throw new LocalizedError('error.builtinEmoji', { name });
+  return name;
+}
+
 export function validateEmoji(value: unknown): EmojiEntry {
   const input = object(value);
   const name = validateEmojiName(input.name);
@@ -98,7 +106,19 @@ export function validateEmoji(value: unknown): EmojiEntry {
   };
 }
 
-export function validatePack(value: unknown, allowEmpty = false): EmojiPack {
+export function validateRegistrationEmoji(value: unknown): EmojiEntry {
+  const input = object(value);
+  // Check the name first so table callers can identify a reserved-name issue
+  // even when another field on the row is invalid too.
+  const name = validateRegistrationName(input.name);
+  return validateEmoji({ ...input, name });
+}
+
+function validatePackWith(
+  value: unknown,
+  allowEmpty: boolean,
+  validateEntry: (entry: unknown) => EmojiEntry,
+): EmojiPack {
   const input = object(value);
   if (input.schemaVersion !== 1) throw new LocalizedError('error.schema');
   const id = field(input.id, 'field.packId', 64);
@@ -117,7 +137,7 @@ export function validatePack(value: unknown, allowEmpty = false): EmojiPack {
   const emojis = input.emojis.map((entry, index) => {
     let emoji: EmojiEntry;
     try {
-      emoji = validateEmoji(entry);
+      emoji = validateEntry(entry);
     } catch (error) {
       throw new LocalizedError('error.entry', {
         index: index + 1,
@@ -144,6 +164,17 @@ export function validatePack(value: unknown, allowEmpty = false): EmojiPack {
   };
   checkPackSize(pack);
   return pack;
+}
+
+export function validatePack(value: unknown, allowEmpty = false): EmojiPack {
+  return validatePackWith(value, allowEmpty, validateEmoji);
+}
+
+export function validateRegistrationPack(
+  value: unknown,
+  allowEmpty = false,
+): EmojiPack {
+  return validatePackWith(value, allowEmpty, validateRegistrationEmoji);
 }
 
 function checkPackSize(pack: EmojiPack) {
@@ -291,18 +322,32 @@ export function importBulk(
       };
     });
   }
-  return validatePack({ ...emptyPack(), emojis: entries }).emojis;
+  return validateRegistrationPack({ ...emptyPack(), emojis: entries }).emojis;
 }
 
 export function appendEntries(
   pack: EmojiPack,
   entries: EmojiEntry[],
 ): EmojiPack {
-  return validatePack({ ...pack, emojis: [...pack.emojis, ...entries] });
+  const current = validatePack(pack, true);
+  const additions = entries.map((entry, index) => {
+    try {
+      return validateRegistrationEmoji(entry);
+    } catch (error) {
+      throw new LocalizedError('error.entry', {
+        index: current.emojis.length + index + 1,
+        detail:
+          error instanceof LocalizedError
+            ? error
+            : new LocalizedError('error.failed'),
+      });
+    }
+  });
+  return validatePack({ ...current, emojis: [...current.emojis, ...additions] });
 }
 
 export function exportPack(value: EmojiPack): Uint8Array {
-  const pack = validatePack(value);
+  const pack = validateRegistrationPack(value);
   const files: Record<string, Uint8Array> = {
     'pack.mcmeta': strToU8(
       JSON.stringify(

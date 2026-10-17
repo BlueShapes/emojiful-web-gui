@@ -1122,6 +1122,21 @@ dialog::backdrop {
 .emoji-card-warning {
   border-color: #c8a249;
 }
+.emoji-card-error {
+  border-color: var(--error);
+  background: #fff5f5;
+}
+.name-conflict-count,
+.emoji-name-error {
+  color: var(--error);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.6;
+}
+.emoji-name-error {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
 .emoji-name-warning,
 .editor-form .name-length-warning {
   padding: 8px;

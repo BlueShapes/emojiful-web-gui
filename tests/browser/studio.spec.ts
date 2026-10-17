@@ -50,13 +50,13 @@ test('static editor creates, persists, filters and exports a pack', async ({
   await page
     .getByLabel(ja['bulk.data'])
     .fill(
-      'name,url,category\nwave,https://example.com/wave.gif,Reactions\ndog,https://example.com/dog.png,Animals',
+      'name,url,category\nmy_wave,https://example.com/my_wave.gif,Reactions\nmy_dog,https://example.com/my_dog.png,Animals',
     );
   await page.getByRole('button', { name: ja['bulk.add'] }).click();
   await expect(page.locator('.emoji-card')).toHaveCount(3);
   await page.reload();
   await expect(page.locator('.emoji-card')).toHaveCount(3);
-  await page.getByLabel(ja['search']).fill('wave');
+  await page.getByLabel(ja['search']).fill('my_wave');
   await expect(page.locator('.emoji-card')).toHaveCount(1);
   await page.getByLabel(ja['search']).fill('');
   await page.getByRole('button', { name: 'happy_catを編集' }).click();
@@ -70,7 +70,7 @@ test('static editor creates, persists, filters and exports a pack', async ({
     .getByRole('button', { name: ja['export.zip'], exact: true })
     .click();
   expect((await download).suggestedFilename()).toBe('my_emojis.zip');
-  await page.getByRole('button', { name: 'dogを削除' }).click();
+  await page.getByRole('button', { name: 'my_dogを削除' }).click();
   await page
     .getByRole('button', { name: ja['confirm.apply'], exact: true })
     .click();
@@ -152,13 +152,13 @@ test('a slow installed-pack read adds a separate pack and retains a newer draft'
     .click();
   await page
     .getByLabel(ja['bulk.data'])
-    .fill('new,https://example.com/new.png,Custom');
+    .fill('gui_new,https://example.com/gui_new.png,Custom');
   await page.getByRole('button', { name: ja['bulk.add'] }).click();
   release();
   await expect(packSelector.locator('option')).toHaveCount(2);
   await expect(page.getByText(':old:', { exact: true })).toBeVisible();
   await packSelector.selectOption(originalKey);
-  await expect(page.getByText(':new:', { exact: true })).toBeVisible();
+  await expect(page.getByText(':gui_new:', { exact: true })).toBeVisible();
   await expect(page.getByText(':old:', { exact: true })).toHaveCount(0);
 });
 
@@ -173,7 +173,7 @@ test('bulk errors keep the collection unchanged and mobile layout stays within v
   await page
     .getByLabel(ja['bulk.data'])
     .fill(
-      'cat,https://example.com/cat.png\ncat,https://example.com/duplicate.png',
+      'my_cat,https://example.com/my_cat.png\nmy_cat,https://example.com/duplicate.png',
     );
   await page.getByRole('button', { name: ja['bulk.add'] }).click();
   await expect(page.getByRole('alert')).toContainText('重複');
@@ -216,12 +216,12 @@ test('mod capability enables the same editor and deploys validated pack data', a
     .click();
   await page
     .getByLabel(ja['bulk.data'])
-    .fill('wave,https://example.com/wave.gif,Reactions');
+    .fill('my_wave,https://example.com/my_wave.gif,Reactions');
   await page.getByRole('button', { name: ja['bulk.add'] }).click();
   await page.getByRole('button', { name: ja['deploy'], exact: true }).click();
   await expect(page.getByRole('status')).toContainText('my_emojis.zipを配置');
   expect(deployed).toMatchObject({
     overwrite: false,
-    pack: { id: 'my_emojis', emojis: [{ name: 'wave' }] },
+    pack: { id: 'my_emojis', emojis: [{ name: 'my_wave' }] },
   });
 });

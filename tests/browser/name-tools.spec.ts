@@ -189,7 +189,9 @@ test('regex timeouts keep the page responsive and edited settings invalidate pre
     exact: true,
   });
   await search.fill('^(a+)+$');
-  await page.getByLabel(ja['replace.replacement'], { exact: true }).fill('cat');
+  await page
+    .getByLabel(ja['replace.replacement'], { exact: true })
+    .fill('my_cat');
   await page
     .getByRole('button', { name: ja['replace.preview'], exact: true })
     .click();

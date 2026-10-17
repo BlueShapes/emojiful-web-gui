@@ -128,7 +128,12 @@ describe('localized backend errors', () => {
         },
         false,
       ),
-    ).rejects.toMatchObject({ key: 'error.builtinEmoji' });
+    ).rejects.toMatchObject({
+      key: 'error.entry',
+      args: {
+        detail: expect.objectContaining({ key: 'error.builtinEmoji' }),
+      },
+    });
     expect(fetchMock).not.toHaveBeenCalled();
   });
 

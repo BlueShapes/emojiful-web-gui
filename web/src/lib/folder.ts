@@ -4,6 +4,7 @@ import {
   MAX_EMOJIS,
   validateEmoji,
   validatePack,
+  validateRegistrationPack,
   type EmojiEntry,
   type EmojiPack,
 } from './pack';
@@ -682,7 +683,7 @@ export async function saveDirectoryPack(
   value: EmojiPack,
 ): Promise<DirectorySource> {
   validateSource(source);
-  const pack = validatePack(value, true);
+  const pack = validateRegistrationPack(value, true);
   await ensureDirectoryWritePermission(source.handle);
 
   let current: FolderSnapshot;

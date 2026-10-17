@@ -31,11 +31,12 @@ import {
   normalizeName,
   readPackFile,
   validateDraft,
-  validateEmoji,
-  validateEmojiName,
+  validateRegistrationEmoji,
+  validateRegistrationName,
   validatePack,
 } from '../lib/pack';
 import type { BulkFormat, EmojiEntry, EmojiPack } from '../lib/pack';
+import { isBuiltinEmojiName } from '../lib/builtin-emojis';
 import { importBulkTable } from '../lib/bulk-table';
 import BulkTable, { createBulkTableRows } from './BulkTable';
 import NameWarningSettings from './NameWarningSettings';
@@ -214,18 +215,25 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
   const visible = pack.emojis.filter(
     (emoji) =>
       (!category || emoji.category === category) &&
-      (!attentionOnly || getNameLengthWarning(emoji.name, nameWarningLength)) &&
+      (!attentionOnly ||
+        isBuiltinEmojiName(emoji.name) ||
+        getNameLengthWarning(emoji.name, nameWarningLength)) &&
       `${emoji.name} ${emoji.url} ${emoji.category}`
         .toLowerCase()
         .includes(query.toLowerCase()),
   );
-  const longNameCount = pack.emojis.filter((emoji) =>
-    getNameLengthWarning(emoji.name, nameWarningLength),
+  const longNameCount = pack.emojis.filter(
+    (emoji) =>
+      !isBuiltinEmojiName(emoji.name) &&
+      getNameLengthWarning(emoji.name, nameWarningLength),
+  ).length;
+  const builtinNameCount = pack.emojis.filter((emoji) =>
+    isBuiltinEmojiName(emoji.name),
   ).length;
   let entryNameError = '';
   if (entry.name) {
     try {
-      validateEmojiName(normalizeName(entry.name));
+      validateRegistrationName(normalizeName(entry.name));
     } catch (error) {
       entryNameError = errorMessage(error, locale);
     }
@@ -627,7 +635,10 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
   function saveEntry(event: SubmitEvent) {
     event.preventDefault();
     try {
-      const next = validateEmoji({ ...entry, name: normalizeName(entry.name) });
+      const next = validateRegistrationEmoji({
+        ...entry,
+        name: normalizeName(entry.name),
+      });
       if (
         pack.emojis.some(
           (emoji) => emoji.name === next.name && emoji.name !== editing,
@@ -1169,6 +1180,11 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
             <span className="name-attention-count">
               {t('name.attentionCount', { count: longNameCount })}
             </span>
+            {builtinNameCount > 0 && (
+              <span className="name-conflict-count" role="status">
+                {t('name.builtinCount', { count: builtinNameCount })}
+              </span>
+            )}
           </div>
           {notice && (
             <div
@@ -1190,7 +1206,7 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
               <div className="emoji-grid">
                 {visible.map((emoji) => (
                   <article
-                    className={`emoji-card${getNameLengthWarning(emoji.name, nameWarningLength) ? ' emoji-card-warning' : ''}`}
+                    className={`emoji-card${isBuiltinEmojiName(emoji.name) ? ' emoji-card-error' : getNameLengthWarning(emoji.name, nameWarningLength) ? ' emoji-card-warning' : ''}`}
                     key={emoji.name}
                   >
                     <div className="emoji-card-top">
@@ -1238,14 +1254,18 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
                     <strong className="emoji-name" dir="ltr">
                       :{emoji.name}:
                     </strong>
-                    {getNameLengthWarning(emoji.name, nameWarningLength) && (
+                    {isBuiltinEmojiName(emoji.name) ? (
+                      <p className="emoji-name-error">
+                        {t('error.builtinEmoji', { name: emoji.name })}
+                      </p>
+                    ) : getNameLengthWarning(emoji.name, nameWarningLength) ? (
                       <p className="emoji-name-warning">
                         {t(
                           'name.longWarning',
                           getNameLengthWarning(emoji.name, nameWarningLength)!,
                         )}
                       </p>
-                    )}
+                    ) : null}
                     <span className="emoji-category" dir="auto">
                       {emoji.category}
                     </span>

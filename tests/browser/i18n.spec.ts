@@ -81,23 +81,23 @@ test('all 22 static routes hydrate in their language under production CSP', asyn
     await page
       .getByLabel(text['bulk.data'])
       .fill(
-        'cat,https://example.com/cat.png\ncat,https://example.com/other.png',
+        'my_cat,https://example.com/my_cat.png\nmy_cat,https://example.com/other-my_cat.png',
       );
     await page
       .getByRole('button', { name: text['bulk.add'], exact: true })
       .click();
     await expect(page.getByRole('alert')).toHaveText(
-      text['error.duplicate'].replace('{index}', '2').replace('{name}', 'cat'),
+      text['error.duplicate'].replace('{index}', '2').replace('{name}', 'my_cat'),
     );
     await page.getByLabel(text['bulk.mode']).selectOption('table');
     const tableRows = page.locator('.bulk-table tbody tr');
     for (const index of [0, 2]) {
-      await tableRows.nth(index).getByRole('textbox').nth(0).fill('cat');
+      await tableRows.nth(index).getByRole('textbox').nth(0).fill('my_cat');
       await tableRows
         .nth(index)
         .getByRole('textbox')
         .nth(1)
-        .fill('https://example.com/cat.png');
+        .fill('https://example.com/my_cat.png');
     }
     await expect(
       page.getByLabel(
@@ -106,12 +106,12 @@ test('all 22 static routes hydrate in their language under production CSP', asyn
           .replace('{field}', text['field.emojiName']),
         { exact: true },
       ),
-    ).toHaveValue('cat');
+    ).toHaveValue('my_cat');
     await page
       .getByRole('button', { name: text['bulk.add'], exact: true })
       .click();
     await expect(page.getByRole('alert')).toHaveText(
-      text['error.duplicate'].replace('{index}', '3').replace('{name}', 'cat'),
+      text['error.duplicate'].replace('{index}', '3').replace('{name}', 'my_cat'),
     );
     expect(
       await page
@@ -236,7 +236,7 @@ test('all 22 mod locales translate installation, installed packs and backend err
       .click();
     await page
       .getByLabel(text['bulk.data'])
-      .fill('wave,https://example.com/wave.gif,Reactions');
+      .fill('my_wave,https://example.com/my_wave.gif,Reactions');
     await page
       .getByRole('button', { name: text['bulk.add'], exact: true })
       .click();
@@ -294,7 +294,7 @@ test('Arabic mirrors the workspace and keeps technical input LTR across language
   await page.getByRole('button', { name: text.bulkInput, exact: true }).click();
   const data = page.getByLabel(text['bulk.data']);
   await expect(data).toHaveCSS('direction', 'ltr');
-  await data.fill('wave,https://example.com/wave.gif,تفاعلات');
+  await data.fill('my_wave,https://example.com/my_wave.gif,تفاعلات');
   await page
     .getByRole('button', { name: text['bulk.add'], exact: true })
     .click();
@@ -308,7 +308,7 @@ test('Arabic mirrors the workspace and keeps technical input LTR across language
   await expect(
     page.getByLabel(french['field.packId'], { exact: true }),
   ).toHaveValue('arabic_pack');
-  await expect(page.getByText(':wave:', { exact: true })).toBeVisible();
+  await expect(page.getByText(':my_wave:', { exact: true })).toBeVisible();
   await expect(page.locator('.emoji-category')).toHaveText('تفاعلات');
 });
 
@@ -324,7 +324,7 @@ test('language switching retains emojis and unfinished pack metadata', async ({
     .click();
   await page
     .getByLabel(japanese['bulk.data'])
-    .fill('wave,https://example.com/wave.gif,反応');
+    .fill('my_wave,https://example.com/my_wave.gif,反応');
   await page
     .getByRole('button', { name: japanese['bulk.add'], exact: true })
     .click();
@@ -342,12 +342,12 @@ test('language switching retains emojis and unfinished pack metadata', async ({
   await expect(
     page.getByLabel(english['field.packId'], { exact: true }),
   ).toHaveValue('');
-  await expect(page.getByText(':wave:', { exact: true })).toBeVisible();
+  await expect(page.getByText(':my_wave:', { exact: true })).toBeVisible();
   await page
     .getByRole('combobox', { name: english.language, exact: true })
     .selectOption('zh-hk');
   await expect(page).toHaveURL(/\/zh-hk\/$/);
-  await expect(page.getByText(':wave:', { exact: true })).toBeVisible();
+  await expect(page.getByText(':my_wave:', { exact: true })).toBeVisible();
 });
 
 test('root page uses English and English mod GUI can deploy', async ({
@@ -375,7 +375,7 @@ test('root page uses English and English mod GUI can deploy', async ({
     .click();
   await page
     .getByLabel(english['bulk.data'])
-    .fill('wave,https://example.com/wave.gif,Reactions');
+    .fill('my_wave,https://example.com/my_wave.gif,Reactions');
   await page
     .getByRole('button', { name: english['bulk.add'], exact: true })
     .click();

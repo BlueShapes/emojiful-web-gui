@@ -49,13 +49,13 @@ test('table import and replacement cannot apply while any name still contains Ja
     .nth(0)
     .getByRole('textbox')
     .nth(1)
-    .fill('https://example.com/cat.png');
-  await rows.nth(1).getByRole('textbox').nth(0).fill('dog');
+    .fill('https://example.com/my_cat.png');
+  await rows.nth(1).getByRole('textbox').nth(0).fill('my_dog');
   await rows
     .nth(1)
     .getByRole('textbox')
     .nth(1)
-    .fill('https://example.com/dog.png');
+    .fill('https://example.com/my_dog.png');
   await expect(rows.nth(0)).toHaveClass(/bulk-row-issue/);
   await expect(rows.nth(0).getByRole('textbox').nth(0)).toHaveAttribute(
     'aria-invalid',
@@ -76,8 +76,8 @@ test('table import and replacement cannot apply while any name still contains Ja
     name: ja['replace.apply'],
     exact: true,
   });
-  await search.fill('dog');
-  await replacement.fill('dog_2');
+  await search.fill('my_dog');
+  await replacement.fill('my_dog_2');
   await page
     .getByRole('button', { name: ja['replace.preview'], exact: true })
     .click();
@@ -86,13 +86,13 @@ test('table import and replacement cannot apply while any name still contains Ja
   );
   await expect(apply).toBeDisabled();
   await search.fill('ねこ');
-  await replacement.fill('cat');
+  await replacement.fill('my_cat');
   await page
     .getByRole('button', { name: ja['replace.preview'], exact: true })
     .click();
   await expect(apply).toBeEnabled();
   await apply.click();
-  await expect(rows.nth(0).getByRole('textbox').nth(0)).toHaveValue('cat');
+  await expect(rows.nth(0).getByRole('textbox').nth(0)).toHaveValue('my_cat');
   await page.getByRole('button', { name: ja['bulk.add'], exact: true }).click();
   await expect(page.locator('.emoji-card')).toHaveCount(2);
 });
