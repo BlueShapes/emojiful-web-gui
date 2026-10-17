@@ -935,6 +935,21 @@ dialog::backdrop {
   border: 1px solid var(--line);
   border-radius: 8px;
 }
+.bulk-common-url {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+  font-size: 12px;
+}
+.bulk-common-url code {
+  overflow-wrap: anywhere;
+  text-align: start;
+}
 .bulk-table-scroll:focus-visible {
   outline: 3px solid #b49832;
   outline-offset: 3px;
@@ -992,6 +1007,60 @@ dialog::backdrop {
 .bulk-table input:focus-visible {
   outline: 2px solid var(--green);
   outline-offset: 0;
+}
+.bulk-url-input {
+  position: relative;
+}
+.bulk-compact-url:not(:focus) {
+  color: transparent;
+}
+.bulk-url-filename {
+  position: absolute;
+  inset: 0;
+  padding: 9px 7px;
+  border: 1px solid transparent;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: start;
+  pointer-events: none;
+}
+.bulk-url-cell:focus-within .bulk-url-filename {
+  display: none;
+}
+.bulk-table tbody tr.bulk-row-issue {
+  background: #fff1e4;
+}
+.bulk-table .bulk-row-issue input,
+.bulk-row-issue .bulk-url-filename,
+.bulk-table .bulk-row-issue .bulk-row-number {
+  font-weight: 700;
+}
+.bulk-table input[aria-invalid='true'] {
+  border-color: var(--error);
+}
+.bulk-cell-issue {
+  color: var(--error);
+  padding: 0 7px 6px;
+  overflow-wrap: anywhere;
+  font-size: 11px;
+}
+.bulk-cell-issue p {
+  margin: 3px 0 0;
+}
+.bulk-issue-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 12px;
+  border-inline-start: 3px solid var(--error);
+  background: #fff1e4;
+  color: var(--error);
+  font-size: 12px;
 }
 .bulk-table .icon-button {
   width: 32px;

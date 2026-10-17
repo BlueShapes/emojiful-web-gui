@@ -263,6 +263,32 @@ function directChildren(parent: Element, localName: string): Element[] {
   );
 }
 
+export function disambiguateNextcloudNames(
+  entries: readonly EmojiEntry[],
+): EmojiEntry[] {
+  const counts = new Map<string, number>();
+  for (const entry of entries)
+    counts.set(entry.name, (counts.get(entry.name) ?? 0) + 1);
+  // Reserve every original name so a generated suffix cannot take another file's name.
+  const used = new Set(counts.keys());
+  return entries.map((entry) => {
+    if (counts.get(entry.name) === 1) return { ...entry };
+    const extension = new URL(entry.url).pathname
+      .split('.')
+      .pop()!
+      .toLowerCase();
+    let sequence = 1;
+    let name: string;
+    do {
+      const suffix = `_${extension}${sequence === 1 ? '' : `_${sequence}`}`;
+      name = entry.name.slice(0, 64 - suffix.length) + suffix;
+      sequence += 1;
+    } while (used.has(name));
+    used.add(name);
+    return { ...entry, name };
+  });
+}
+
 function responseStatusCode(response: Element): number | null {
   const statuses = directChildren(response, 'status');
   if (statuses.length > 1) return fail('nextcloud.invalidXml');
@@ -449,12 +475,13 @@ export function importNextcloudListing(
   }
 
   if (!entries.length) return fail('nextcloud.noImages');
-  const normalizedPack = { ...emptyPack(), emojis: entries };
+  const namedEntries = disambiguateNextcloudNames(entries);
+  const normalizedPack = { ...emptyPack(), emojis: namedEntries };
   if (
     new TextEncoder().encode(JSON.stringify(normalizedPack)).byteLength >
     MAX_PACK_BYTES
   ) {
     throw new LocalizedError('error.packSize');
   }
-  return entries;
+  return namedEntries;
 }

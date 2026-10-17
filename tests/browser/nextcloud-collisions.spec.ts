@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import ja from '../../web/src/i18n/messages/ja.json' with { type: 'json' };
+import ar from '../../web/src/i18n/messages/ar.json' with { type: 'json' };
 
 const root = '/public.php/dav/files/Share123/';
 function listing(...filenames: string[]) {
@@ -41,6 +42,9 @@ test('same-stem Nextcloud files import separately and manually introduced collis
     );
   }
   await expect(page.locator('.bulk-issue-summary')).toContainText('2');
+  await expect(rows.nth(0).locator('.bulk-cell-issue')).toHaveText(
+    '絵文字名「medetai-nya」が2行目と重複しています。',
+  );
   await page.getByRole('button', { name: ja['bulk.add'], exact: true }).click();
   await expect(page.getByRole('alert')).toBeVisible();
   await expect(page.locator('.emoji-card')).toHaveCount(0);
@@ -81,7 +85,9 @@ test('invalid fields and existing names are emphasized live and jump to the next
   await expect(page.locator('.bulk-row-issue')).toHaveCount(2);
   await expect(cell(0, 0)).toHaveAttribute('aria-invalid', 'true');
   await expect(cell(2, 1)).toHaveAttribute('aria-invalid', 'true');
-  await expect(rows.nth(0).locator('.bulk-cell-issue')).toContainText('使用');
+  await expect(rows.nth(0).locator('.bulk-cell-issue')).toHaveText(
+    ja['error.nameUsed'].replace('{name}', 'cat'),
+  );
   await expect(rows.nth(1)).not.toHaveClass(/bulk-row-issue/);
   await page
     .getByRole('button', { name: ja['bulk.nextIssue'], exact: true })
@@ -101,4 +107,71 @@ test('invalid fields and existing names are emphasized live and jump to the next
   await expect(page.locator('.bulk-issue-summary')).toHaveCount(0);
   await page.getByRole('button', { name: ja['bulk.add'], exact: true }).click();
   await expect(page.locator('.emoji-card')).toHaveCount(3);
+});
+
+test('a new pack clears the previous Nextcloud folder prefix', async ({
+  page,
+}) => {
+  await page.goto('/ja/');
+  await page.getByRole('button', { name: ja.bulkInput, exact: true }).click();
+  await page
+    .getByLabel(ja['bulk.mode'], { exact: true })
+    .selectOption('nextcloud');
+  await page
+    .getByLabel(ja['nextcloud.shareUrl'], { exact: true })
+    .fill('https://cloud.example/s/Share123');
+  await page
+    .getByLabel(ja['nextcloud.output'], { exact: true })
+    .fill(listing('cat.png'));
+  await page
+    .getByRole('button', { name: ja['nextcloud.review'], exact: true })
+    .click();
+  await expect(page.locator('.bulk-common-url')).toBeVisible();
+  await page.getByRole('button', { name: ja.closeEditor, exact: true }).click();
+  await page.getByRole('button', { name: ja.newPack, exact: true }).click();
+  await page.getByRole('button', { name: ja.bulkInput, exact: true }).click();
+  await page.getByLabel(ja['bulk.mode'], { exact: true }).selectOption('table');
+  await expect(page.locator('.bulk-common-url')).toHaveCount(0);
+  await expect(page.locator('.bulk-row-issue')).toHaveCount(0);
+});
+
+test('issue highlighting and navigation fit mobile Japanese and Arabic tables', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  for (const [locale, messages] of [
+    ['ja', ja],
+    ['ar', ar],
+  ] as const) {
+    await page.goto(`/${locale}/`);
+    await page
+      .getByRole('button', { name: messages.bulkInput, exact: true })
+      .click();
+    await page
+      .getByLabel(messages['bulk.mode'], { exact: true })
+      .selectOption('table');
+    const rows = page.locator('.bulk-table tbody tr');
+    for (const index of [0, 2]) {
+      await rows.nth(index).getByRole('textbox').nth(0).fill('cat');
+      await rows
+        .nth(index)
+        .getByRole('textbox')
+        .nth(1)
+        .fill('https://example.com/cat.png');
+    }
+    await expect(page.locator('.bulk-row-issue')).toHaveCount(2);
+    await page
+      .getByRole('button', { name: messages['bulk.nextIssue'], exact: true })
+      .click();
+    await expect(rows.nth(0).getByRole('textbox').nth(0)).toBeFocused();
+    expect(
+      await page
+        .locator('.editor-dialog')
+        .evaluate((dialog) => dialog.scrollWidth <= dialog.clientWidth + 1),
+    ).toBe(true);
+    await page.screenshot({
+      path: `.work/bulk-table-issues-mobile-${locale}.png`,
+      fullPage: true,
+    });
+  }
 });

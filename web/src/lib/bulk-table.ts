@@ -8,6 +8,105 @@ import {
 } from './pack';
 import type { EmojiEntry } from './pack';
 
+export interface BulkTableIssue {
+  field: keyof EmojiEntry;
+  error: LocalizedError;
+}
+
+function fieldForError(error: LocalizedError): keyof EmojiEntry {
+  switch (error.key) {
+    case 'error.emojiName':
+      return 'name';
+    case 'error.urlFull':
+    case 'error.urlSafe':
+      return 'url';
+    case 'error.fieldLength':
+    case 'error.fieldString': {
+      const field = error.args.field;
+      if (field instanceof LocalizedError) {
+        switch (field.key) {
+          case 'field.emojiName':
+            return 'name';
+          case 'field.imageUrl':
+            return 'url';
+          case 'field.category':
+            return 'category';
+        }
+      }
+      break;
+    }
+  }
+  return 'name';
+}
+
+export function getBulkTableIssues(
+  rows: readonly EmojiEntry[],
+  defaultCategory: string,
+  existingNames: readonly string[] = [],
+): BulkTableIssue[][] {
+  const issues = rows.map(() => [] as BulkTableIssue[]);
+  const participatingRows = rows
+    .map((row, index) => ({ row, index }))
+    .filter(
+      ({ row }) => row.name.trim() || row.url.trim() || row.category.trim(),
+    );
+  const normalizedExistingNames = new Set(existingNames.map(normalizeName));
+  const rowsByName = new Map<string, number[]>();
+
+  for (const { row, index } of participatingRows) {
+    const name = normalizeName(row.name);
+    if (!name) continue;
+    const indices = rowsByName.get(name) ?? [];
+    indices.push(index);
+    rowsByName.set(name, indices);
+  }
+
+  for (const [name, indices] of rowsByName) {
+    if (normalizedExistingNames.has(name)) {
+      for (const index of indices) {
+        issues[index].push({
+          field: 'name',
+          error: new LocalizedError('error.nameUsed', { name }),
+        });
+      }
+    }
+    if (indices.length > 1) {
+      const firstIndex = indices[0];
+      const nextIndex = indices[1];
+      for (const index of indices) {
+        issues[index].push({
+          field: 'name',
+          error: new LocalizedError('error.duplicate', {
+            index: index === firstIndex ? nextIndex + 1 : firstIndex + 1,
+            name,
+          }),
+        });
+      }
+    }
+  }
+
+  for (const { row, index } of participatingRows) {
+    try {
+      validateEmoji({
+        name: normalizeName(row.name),
+        url: row.url,
+        category: row.category.trim() || defaultCategory,
+      });
+    } catch (error) {
+      const validationError =
+        error instanceof LocalizedError
+          ? error
+          : new LocalizedError('error.failed');
+      issues[index].push({
+        field: fieldForError(validationError),
+        error: validationError,
+      });
+    }
+  }
+
+  return issues;
+}
+
 export function importBulkTable(
   rows: readonly EmojiEntry[],
   defaultCategory: string,

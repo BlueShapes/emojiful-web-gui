@@ -153,6 +153,7 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
     'text',
   );
   const [bulkRows, setBulkRows] = useState(createBulkTableRows);
+  const [bulkUrlPrefix, setBulkUrlPrefix] = useState('');
   const [nextcloudDraft, setNextcloudDraft] = useState(emptyNextcloudDraft);
   const [panelError, setPanelError] = useState('');
   const [installed, setInstalled] = useState<InstalledPack[]>([]);
@@ -418,6 +419,7 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
     setBulkFormat('auto');
     setBulkMode('text');
     setBulkRows(createBulkTableRows());
+    setBulkUrlPrefix('');
     setNextcloudDraft(emptyNextcloudDraft());
     setPanelError('');
     setConfirmation(null);
@@ -612,6 +614,7 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
             id: `nextcloud-${index}`,
           })),
         );
+        setBulkUrlPrefix(folder.davUrl);
         setBulkMode('table');
         setPanelError('');
         return;
@@ -626,8 +629,10 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
         validateDraft({ ...current, emojis: [...current.emojis, ...entries] }),
       );
       setPanel(null);
-      if (bulkMode === 'table') setBulkRows(createBulkTableRows());
-      else setBulk('');
+      if (bulkMode === 'table') {
+        setBulkRows(createBulkTableRows());
+        setBulkUrlPrefix('');
+      } else setBulk('');
       notify(t('notice.bulkAdded', { count: entries.length }));
     } catch (error) {
       setPanelError(errorMessage(error, locale));
@@ -1467,7 +1472,12 @@ export default function PackStudio({ locale = 'en' }: { locale?: Locale }) {
                 locale={locale}
                 rows={bulkRows}
                 defaultCategory={bulkCategory}
-                onChange={setBulkRows}
+                urlPrefix={bulkUrlPrefix}
+                existingNames={pack.emojis.map((emoji) => emoji.name)}
+                onChange={(rows) => {
+                  setBulkRows(rows);
+                  setPanelError('');
+                }}
               />
             ) : (
               <>

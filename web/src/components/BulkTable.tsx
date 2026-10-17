@@ -4,6 +4,7 @@ import { translate } from '../i18n';
 import type { Locale, MessageArgs, MessageKey } from '../i18n';
 import { MAX_EMOJIS } from '../lib/pack';
 import type { EmojiEntry } from '../lib/pack';
+import { getBulkTableIssues } from '../lib/bulk-table';
 
 export interface BulkTableRow extends EmojiEntry {
   id: string;
@@ -22,17 +23,60 @@ export default function BulkTable({
   locale,
   rows,
   defaultCategory,
+  urlPrefix = '',
+  existingNames = [],
   onChange,
 }: {
   locale: Locale;
   rows: BulkTableRow[];
   defaultCategory: string;
+  urlPrefix?: string;
+  existingNames?: readonly string[];
   onChange: (rows: BulkTableRow[]) => void;
 }) {
   const t = (key: MessageKey, args?: MessageArgs) =>
     translate(locale, key, args);
   const nameInputs = useRef(new Map<string, HTMLInputElement>());
   const pendingFocus = useRef<string | null>(null);
+  const table = useRef<HTMLTableElement>(null);
+  const lastIssueRow = useRef<string | null>(null);
+  const issues = getBulkTableIssues(rows, defaultCategory, existingNames);
+  const issueRows = issues.flatMap((rowIssues, index) =>
+    rowIssues.length ? [index] : [],
+  );
+  const hasIssue = (index: number, field: keyof EmojiEntry) =>
+    issues[index].some((issue) => issue.field === field);
+  function describedBy(index: number, field: keyof EmojiEntry) {
+    return (
+      [
+        field === 'url' && urlPrefix ? 'bulk-url-help' : '',
+        hasIssue(index, field) ? `bulk-issue-${rows[index].id}-${field}` : '',
+      ]
+        .filter(Boolean)
+        .join(' ') || undefined
+    );
+  }
+  function renderIssues(index: number, field: keyof EmojiEntry) {
+    const fieldIssues = issues[index].filter((issue) => issue.field === field);
+    if (!fieldIssues.length) return null;
+    return (
+      <div
+        className="bulk-cell-issue"
+        id={`bulk-issue-${rows[index].id}-${field}`}
+      >
+        {fieldIssues.map((issue, issueIndex) => (
+          <p key={issueIndex}>
+            {t(
+              issue.error.key === 'error.duplicate'
+                ? 'bulk.duplicateName'
+                : issue.error.key,
+              issue.error.args,
+            )}
+          </p>
+        ))}
+      </div>
+    );
+  }
   useEffect(() => {
     if (pendingFocus.current) {
       nameInputs.current.get(pendingFocus.current)?.focus();
@@ -51,6 +95,38 @@ export default function BulkTable({
       <p className="form-intro" id="bulk-table-help">
         {t('bulk.tableHelp')}
       </p>
+      {urlPrefix && (
+        <div className="bulk-common-url">
+          <span>{t('bulk.commonUrl')}</span>
+          <code dir="ltr">{urlPrefix}</code>
+          <p className="form-intro" id="bulk-url-help">
+            {t('bulk.compactUrlHelp')}
+          </p>
+        </div>
+      )}
+      {issueRows.length > 0 && (
+        <div className="bulk-issue-summary" role="status">
+          <strong>{t('bulk.issueSummary', { count: issueRows.length })}</strong>
+          <button
+            className="button secondary"
+            type="button"
+            onClick={() => {
+              const previous = issueRows.findIndex(
+                (index) => rows[index].id === lastIssueRow.current,
+              );
+              const index = issueRows[(previous + 1) % issueRows.length];
+              lastIssueRow.current = rows[index].id;
+              const input = table.current?.tBodies[0].rows[
+                index
+              ]?.querySelector<HTMLInputElement>('input[aria-invalid="true"]');
+              input?.focus();
+              input?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+            }}
+          >
+            {t('bulk.nextIssue')}
+          </button>
+        </div>
+      )}
       <div
         className="bulk-table-scroll"
         role="region"
@@ -58,7 +134,7 @@ export default function BulkTable({
         aria-describedby="bulk-table-help"
         tabIndex={0}
       >
-        <table className="bulk-table">
+        <table className="bulk-table" ref={table}>
           <thead>
             <tr>
               <th scope="col" className="bulk-row-number">
@@ -76,7 +152,10 @@ export default function BulkTable({
           </thead>
           <tbody>
             {rows.map((row, index) => (
-              <tr key={row.id}>
+              <tr
+                key={row.id}
+                className={issues[index].length ? 'bulk-row-issue' : undefined}
+              >
                 <th scope="row" className="bulk-row-number">
                   {index + 1}
                 </th>
@@ -94,30 +173,53 @@ export default function BulkTable({
                     autoCapitalize="none"
                     spellCheck={false}
                     maxLength={64}
+                    aria-invalid={hasIssue(index, 'name') || undefined}
+                    aria-describedby={describedBy(index, 'name')}
                     value={row.name}
                     placeholder="happy_cat"
                     onChange={(event) =>
                       edit(row.id, 'name', event.target.value)
                     }
                   />
+                  {renderIssues(index, 'name')}
                 </td>
-                <td>
-                  <input
-                    aria-label={t('bulk.cell', {
-                      index: index + 1,
-                      field: t('field.imageUrl'),
-                    })}
-                    dir="ltr"
-                    inputMode="url"
-                    autoCapitalize="none"
-                    spellCheck={false}
-                    maxLength={2048}
-                    value={row.url}
-                    placeholder="https://example.com/cat.png"
-                    onChange={(event) =>
-                      edit(row.id, 'url', event.target.value)
-                    }
-                  />
+                <td className="bulk-url-cell">
+                  <div className="bulk-url-input">
+                    <input
+                      aria-label={t('bulk.cell', {
+                        index: index + 1,
+                        field: t('field.imageUrl'),
+                      })}
+                      className={
+                        urlPrefix && row.url.startsWith(urlPrefix)
+                          ? 'bulk-compact-url'
+                          : undefined
+                      }
+                      dir="ltr"
+                      inputMode="url"
+                      autoCapitalize="none"
+                      spellCheck={false}
+                      maxLength={2048}
+                      aria-invalid={hasIssue(index, 'url') || undefined}
+                      aria-describedby={describedBy(index, 'url')}
+                      title={row.url}
+                      value={row.url}
+                      placeholder="https://example.com/cat.png"
+                      onChange={(event) =>
+                        edit(row.id, 'url', event.target.value)
+                      }
+                    />
+                    {urlPrefix && row.url.startsWith(urlPrefix) && (
+                      <span
+                        className="bulk-url-filename"
+                        dir="ltr"
+                        aria-hidden="true"
+                      >
+                        {row.url.slice(urlPrefix.length)}
+                      </span>
+                    )}
+                  </div>
+                  {renderIssues(index, 'url')}
                 </td>
                 <td>
                   <input
@@ -127,12 +229,15 @@ export default function BulkTable({
                     })}
                     dir="auto"
                     maxLength={80}
+                    aria-invalid={hasIssue(index, 'category') || undefined}
+                    aria-describedby={describedBy(index, 'category')}
                     value={row.category}
                     placeholder={defaultCategory}
                     onChange={(event) =>
                       edit(row.id, 'category', event.target.value)
                     }
                   />
+                  {renderIssues(index, 'category')}
                 </td>
                 <td>
                   <button

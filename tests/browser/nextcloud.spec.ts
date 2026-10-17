@@ -75,9 +75,42 @@ test('terminal listing becomes editable rows before an atomic pack addition', as
   await expect(rows.nth(0).getByRole('textbox').nth(0)).toHaveValue(
     'happy_cat',
   );
-  await expect(rows.nth(0).getByRole('textbox').nth(1)).toHaveValue(
-    `https://cloud.example${root}Happy%20Cat.PNG`,
+  const imageUrl = rows.nth(0).getByRole('textbox').nth(1);
+  const originalUrl = `https://cloud.example${root}Happy%20Cat.PNG`;
+  await expect(page.locator('.bulk-common-url code')).toHaveText(
+    `https://cloud.example${root}`,
   );
+  const filename = rows.nth(0).locator('.bulk-url-filename');
+  await expect(filename).toHaveText('Happy%20Cat.PNG');
+  await expect(filename).toBeVisible();
+  await expect(imageUrl).toHaveCSS('color', 'rgba(0, 0, 0, 0)');
+  await expect(imageUrl).toHaveValue(originalUrl);
+  await expect(imageUrl).toHaveAttribute('title', originalUrl);
+  await imageUrl.focus();
+  await expect(imageUrl).toHaveValue(originalUrl);
+  await expect(filename).toBeHidden();
+  await expect(imageUrl).not.toHaveCSS('color', 'rgba(0, 0, 0, 0)');
+  const editedUrl = `https://cloud.example${root}Comfy%20Cat.PNG`;
+  await imageUrl.fill(editedUrl);
+  await rows.nth(0).getByRole('textbox').nth(2).focus();
+  await expect(filename).toHaveText('Comfy%20Cat.PNG');
+  await expect(filename).toBeVisible();
+  await imageUrl.fill('https://cloud.example/other/cat.png');
+  await imageUrl.blur();
+  await expect(imageUrl).toHaveValue('https://cloud.example/other/cat.png');
+  await expect(filename).toHaveCount(0);
+  await imageUrl.fill(editedUrl);
+  const mode = page.getByLabel(ja['bulk.mode'], { exact: true });
+  await mode.selectOption('nextcloud');
+  await page
+    .getByLabel(ja['nextcloud.folderPath'], { exact: true })
+    .fill('/other');
+  await mode.selectOption('table');
+  await expect(page.locator('.bulk-common-url code')).toHaveText(
+    `https://cloud.example${root}`,
+  );
+  await expect(filename).toHaveText('Comfy%20Cat.PNG');
+  await expect(filename).toBeVisible();
   await expect(rows.nth(0).getByRole('textbox').nth(2)).toHaveValue('Animals');
   expect(remoteRequests).toEqual([]);
   const draft = await page.evaluate(() =>
@@ -85,10 +118,26 @@ test('terminal listing becomes editable rows before an atomic pack addition', as
   );
   expect(draft.packs[0].pack.emojis).toEqual([]);
   await rows.nth(0).getByRole('textbox').nth(0).fill('comfy_cat');
+  await page.screenshot({
+    path: '.work/nextcloud-compact-desktop.png',
+    fullPage: true,
+  });
   await page.getByRole('button', { name: ja['bulk.add'], exact: true }).click();
   await expect(page.locator('.emoji-card')).toHaveCount(2);
   await page.reload();
   await expect(page.getByText(':comfy_cat:', { exact: true })).toBeVisible();
+  const savedUrls = await page.evaluate(() =>
+    JSON.parse(
+      localStorage.getItem('emojiful.pack-studio.workspace.v1')!,
+    ).packs[0].pack.emojis.map((emoji: { url: string }) => emoji.url),
+  );
+  expect(savedUrls).toEqual([
+    editedUrl,
+    `https://cloud.example${root}wave.gif`,
+  ]);
+  await page.getByRole('button', { name: ja.bulkInput, exact: true }).click();
+  await mode.selectOption('table');
+  await expect(page.locator('.bulk-common-url')).toHaveCount(0);
   expect(errors).toEqual([]);
 });
 
@@ -164,6 +213,15 @@ test('XML files support duplicate-name repair and report empty image listings', 
   await page
     .getByRole('button', { name: ja['nextcloud.review'], exact: true })
     .click();
+  const nameInputs = page.locator('.bulk-table tbody tr');
+  await expect(nameInputs.nth(0).getByRole('textbox').nth(0)).toHaveValue(
+    'cat_png',
+  );
+  await expect(nameInputs.nth(1).getByRole('textbox').nth(0)).toHaveValue(
+    'cat_gif',
+  );
+  await nameInputs.nth(0).getByRole('textbox').nth(0).fill('cat');
+  await nameInputs.nth(1).getByRole('textbox').nth(0).fill('cat');
   await page.getByRole('button', { name: ja['bulk.add'], exact: true }).click();
   await expect(page.getByRole('alert')).toContainText('重複');
   await page
@@ -193,7 +251,9 @@ test('the Nextcloud guide fits mobile Japanese and Arabic layouts', async ({
       .selectOption('nextcloud');
     await page
       .getByLabel(messages['nextcloud.shareUrl'], { exact: true })
-      .fill('https://cloud.example/s/Share123');
+      .fill(
+        'https://cloud.example/nextcloud/s/Share123?path=%2FAnimals%20%26%20Friends',
+      );
     await expect(
       page.getByLabel(messages['nextcloud.command'], { exact: true }),
     ).toHaveCSS('direction', 'ltr');
@@ -204,6 +264,31 @@ test('the Nextcloud guide fits mobile Japanese and Arabic layouts', async ({
     ).toBe(true);
     await page.screenshot({
       path: `.work/nextcloud-mobile-${locale}.png`,
+      fullPage: true,
+    });
+    await page
+      .getByLabel(messages['nextcloud.output'], { exact: true })
+      .fill(validListing);
+    await page
+      .getByRole('button', { name: messages['nextcloud.review'], exact: true })
+      .click();
+    await expect(page.locator('.bulk-common-url code')).toHaveCSS(
+      'direction',
+      'ltr',
+    );
+    await expect(
+      page
+        .locator('.bulk-table tbody tr')
+        .first()
+        .locator('.bulk-url-filename'),
+    ).toHaveText('Happy%20Cat.PNG');
+    expect(
+      await page
+        .locator('.editor-dialog')
+        .evaluate((dialog) => dialog.scrollWidth <= dialog.clientWidth + 1),
+    ).toBe(true);
+    await page.screenshot({
+      path: `.work/nextcloud-compact-mobile-${locale}.png`,
       fullPage: true,
     });
   }
@@ -236,13 +321,11 @@ test('a delayed XML file read cannot overwrite input after switching methods', a
       return original.call(this);
     };
   });
-  await page
-    .getByLabel(ja['nextcloud.file'], { exact: true })
-    .setInputFiles({
-      name: 'slow.xml',
-      mimeType: 'application/xml',
-      buffer: Buffer.from('<stale/>'),
-    });
+  await page.getByLabel(ja['nextcloud.file'], { exact: true }).setInputFiles({
+    name: 'slow.xml',
+    mimeType: 'application/xml',
+    buffer: Buffer.from('<stale/>'),
+  });
   await page.waitForFunction(
     () =>
       (window as typeof window & { listingReadStarted?: boolean })
@@ -268,13 +351,11 @@ test('XML file size, image count and normalized pack size stay bounded', async (
   await openNextcloud(page);
   const output = page.getByLabel(ja['nextcloud.output'], { exact: true });
   await output.fill(validListing);
-  await page
-    .getByLabel(ja['nextcloud.file'], { exact: true })
-    .setInputFiles({
-      name: 'large.xml',
-      mimeType: 'application/xml',
-      buffer: Buffer.alloc(4 * 1024 * 1024 + 1, 32),
-    });
+  await page.getByLabel(ja['nextcloud.file'], { exact: true }).setInputFiles({
+    name: 'large.xml',
+    mimeType: 'application/xml',
+    buffer: Buffer.alloc(4 * 1024 * 1024 + 1, 32),
+  });
   await expect(page.getByRole('alert')).toHaveText(ja['error.fileSize']);
   await expect(output).toHaveValue(validListing);
   await output.fill(
@@ -294,20 +375,18 @@ test('XML file size, image count and normalized pack size stay bounded', async (
     .getByLabel(ja['nextcloud.folderPath'], { exact: true })
     .fill(`/${longPath}`);
   const largeRoot = `/nextcloud/public.php/dav/files/Share123/${longPath}/`;
-  await page
-    .getByLabel(ja['nextcloud.file'], { exact: true })
-    .setInputFiles({
-      name: 'long-urls.xml',
-      mimeType: 'application/xml',
-      buffer: Buffer.from(
-        listing(
-          response(largeRoot, true),
-          ...Array.from({ length: 1450 }, (_, index) =>
-            response(`${largeRoot}cat_${index}.png`),
-          ),
+  await page.getByLabel(ja['nextcloud.file'], { exact: true }).setInputFiles({
+    name: 'long-urls.xml',
+    mimeType: 'application/xml',
+    buffer: Buffer.from(
+      listing(
+        response(largeRoot, true),
+        ...Array.from({ length: 1450 }, (_, index) =>
+          response(`${largeRoot}cat_${index}.png`),
         ),
       ),
-    });
+    ),
+  });
   await expect(output).toHaveValue(new RegExp(longPath));
   await page
     .getByRole('button', { name: ja['nextcloud.review'], exact: true })
